@@ -1,0 +1,255 @@
+.container {
+  padding-bottom: 4rem;
+}
+
+/* Hero Section — same pattern as Home */
+.hero {
+  background-color: var(--color-primary);
+  background-image: linear-gradient(rgba(28, 79, 54, 0.85), rgba(28, 79, 54, 0.95)), url('../assets/pontos.jpg');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  text-align: center;
+  padding: 5rem 2rem 4rem 2rem;
+}
+
+.heroBackground {
+  display: none;
+}
+
+.locationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.heroSubtitle {
+  font-size: 1.125rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.content {
+  max-width: 1000px;
+  margin: 4rem auto 0 auto;
+  padding: 0 2rem;
+}
+
+.alertBox {
+  background: #fffbeb; /* Light yellow/beige from image */
+  border: 1px solid #fde68a; /* Soft orange/yellow border */
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 4px 12px -3px rgba(146, 64, 14, 0.05);
+}
+
+.alertHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #92400e; /* Dark brown/orange */
+  margin-bottom: 0.5rem;
+}
+
+.alertTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.alertSubtitle {
+  color: #b45309; /* Medium orange/brown */
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.statCard {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.statIconWrapper {
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #e5e7eb;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statCardTitle {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.statDescription {
+  color: #4b5563;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.linesHeader {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.linesTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.lineList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lineButton {
+  background: white;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.lineButton:hover {
+  border-color: #1c4f36;
+  box-shadow: 0 10px 20px -5px rgba(28, 79, 54, 0.1);
+  transform: translateY(-2px);
+}
+
+.lineInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.lineBadge {
+  background: linear-gradient(135deg, #1c4f36, #2d7a56);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.lineText h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.lineText p {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.lineFrequency {
+  margin-left: 0.5rem;
+  font-size: 0.7rem;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.rightIcon {
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.2rem;
+  }
+
+  .alertBox {
+    padding: 1.5rem;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Performance Optimizations */
+.fadeIn {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.skeletonBox {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeletonItem {
+  height: 90px;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  border-radius: 16px;
+  animation: skeletonLoading 1.5s infinite;
+}
+
+@keyframes skeletonLoading {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}

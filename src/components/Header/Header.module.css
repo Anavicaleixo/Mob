@@ -1,0 +1,69 @@
+.header {
+  background-color: #1C3A2E;
+  color: white;
+  padding: 0.5rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.nav a {
+  font-weight: 600;
+  opacity: 0.8;
+  transition: all 0.2s;
+  padding: 0.6rem 1.25rem;
+  border-radius: 50px;
+  color: white;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.nav a:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav a.active {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.userMenu {
+  position: relative;
+}
+
+.userButton {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.userButton:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}

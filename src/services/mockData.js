@@ -1,0 +1,19 @@
+export const initialLines = [
+  { id: '1', name: '01', description: 'Padre Marcelo / Paiol / Favorino X Vila Velha I / Vila Velha II / Germana', popular: true, route: 'Padre Marcelo / Paiol / Favorino -> Vila Velha I / Vila Velha II / Germana', extra_info: 'Linha que atende os bairros Padre Marcelo, Paiol, Favorino e conecta com...' },
+  { id: '10', name: '10', description: 'Terras do Vale', popular: true, route: 'Centro -> Eugênio de Melo', extra_info: 'Linha que conecta o Centro ao bairro Eugênio de Melo passando por Terras do Vale...' },
+  { id: '8', name: '08', description: 'Tijuco Preto X Jd. Panorama', popular: false, route: 'Tijuco Preto -> Panorama' },
+  { id: '6', name: '06', description: 'Rodoviária X Eldorado/Pinus', popular: false, route: 'Rodoviária -> Pinus' }
+];
+
+export const initialStops = [
+  { id: '1', name: 'Terminal Padre Marcelo', location: 'Centro', lat: -23.100, lng: -45.700, lines: ['01'] },
+  { id: '2', name: 'Terminal Centro', location: 'Centro', lat: -23.102, lng: -45.705, lines: ['10'] },
+  { id: '3', name: 'Rodoviária de Caçapava', location: 'Centro', lat: -23.105, lng: -45.710, lines: ['06'] },
+  { id: '4', name: 'Aldeias da Serra', location: 'Bairro', lat: -23.090, lng: -45.680, lines: [] },
+];
+
+export const initialReports = [
+  { id: '1', lineId: '8', type: 'positive', description: '"Graças ao Mobtracker não perco mais o horário"', author: 'Anônimo', time: '1h' },
+  { id: '2', lineId: '1', type: 'negative', description: '"Ônibus vive quebrando"', author: 'Lucas', time: '2h' },
+  { id: '3', lineId: '6', type: 'warning', description: '"Motoristas dirigindo e cobrando ao mesmo tempo"', author: 'Joana', time: '3h' },
+];

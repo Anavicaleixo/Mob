@@ -1,0 +1,80 @@
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bus, User, LogOut, AlertTriangle, Star, Activity, ChevronRight, Award } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import styles from './Header.module.css';
+import logoImg from '../../assets/Mob.png';
+
+
+export default function Header() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const isActive = (path) => location.pathname === path ? styles.active : '';
+
+  const handleLogout = async () => {
+    await logout();
+    setDropdownOpen(false);
+    navigate('/login');
+  };
+
+  return (
+    <header className={styles.header}>
+      <Link to="/" className={styles.logo}>
+        <img src={logoImg} alt="MobTracker Logo" style={{ height: '95px' }} />
+      </Link>
+      
+      <nav className={styles.nav}>
+        <Link to="/" className={isActive('/')}>Início</Link>
+        <Link to="/linhas" className={isActive('/linhas')}>Linhas</Link>
+        <Link to="/pontos" className={isActive('/pontos')}>Pontos</Link>
+        <Link to="/sobre" className={isActive('/sobre')}>Sobre</Link>
+      </nav>
+
+      <div className={styles.userMenu}>
+        {user ? (
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className={styles.userButton}
+            >
+              <User size={18} color="white" />
+              {user.email.split('@')[0]}
+              <LogOut size={16} style={{ marginLeft: '0.25rem', transform: 'rotate(180deg)' }} color="white" />
+            </button>
+            
+            {dropdownOpen && (
+              <div style={{ position: 'absolute', top: '130%', right: 0, background: '#1c2b23', width: '220px', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '0.5rem', zIndex: 9999 }}>
+                <Link to="/perfil" onClick={() => setDropdownOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#d1d5db', textDecoration: 'none', padding: '0.75rem 1rem', borderBottom: '1px solid #374151' }}>
+                  <User size={16} color="white" /> Minha conta
+                </Link>
+                <Link to="/alertas" onClick={() => setDropdownOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#d1d5db', textDecoration: 'none', padding: '0.75rem 1rem', borderBottom: '1px solid #374151' }}>
+                  <AlertTriangle size={16} color="white" /> Alertas
+                </Link>
+                <Link to="/recompensas" onClick={() => setDropdownOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#d1d5db', textDecoration: 'none', padding: '0.75rem 1rem', borderBottom: '1px solid #374151' }}>
+                  <Award size={16} color="white" /> Recompensas
+                </Link>
+                {user.email === 'admin@mobtracker.com' && (
+                  <Link to="/admin" onClick={() => setDropdownOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#d1d5db', textDecoration: 'none', padding: '0.75rem 1rem', borderBottom: '1px solid #374151' }}>
+                    <Activity size={16} color="white" /> Dashboard
+                  </Link>
+                )}
+                <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '1rem', color: '#ef4444', background: 'transparent', border: 'none', padding: '0.75rem 1rem', cursor: 'pointer', textAlign: 'left', fontWeight: 'bold' }}>
+                  <LogOut size={16} /> Sair
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          !['/login', '/cadastro', '/recuperar-senha', '/redefinir-senha'].includes(location.pathname) && (
+            <Link to="/login" className={styles.userButton} style={{ textDecoration: 'none' }}>
+              Entrar
+            </Link>
+          )
+        )}
+      </div>
+    </header>
+  );
+}

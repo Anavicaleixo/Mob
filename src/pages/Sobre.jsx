@@ -1,0 +1,127 @@
+import React from 'react';
+import { Users, TrendingUp, Bus, Shield, Zap, Heart, Target, Eye, MapPin, Share2 } from 'lucide-react';
+import styles from './Sobre.module.css';
+
+export default function Sobre() {
+  return (
+    <div className={styles.container}>
+      <section className={styles.hero}>
+        <div className={styles.locationBadge}>
+          <MapPin size={16} /> Caçapava - SP
+        </div>
+        <h1 className={styles.title}>
+          Sobre a <span>MobTracker</span>
+        </h1>
+        <p className={styles.subtitle}>
+          Plataforma cidadã para monitoramento e transparência do transporte público de Caçapava, SP
+        </p>
+      </section>
+
+      <div className={styles.content}>
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <Users size={24} className={styles.iconMuted} />
+            <h3>~6.000</h3>
+            <p>Passageiros/dia</p>
+            <span>nos dias úteis</span>
+          </div>
+          <div className={styles.statCard}>
+            <TrendingUp size={24} className={styles.iconMuted} />
+            <h3>100%</h3>
+            <p>Frota renovada</p>
+            <span>concluído em 2025</span>
+          </div>
+          <div className={styles.statCard}>
+            <Bus size={24} className={styles.iconMuted} />
+            <h3>16</h3>
+            <p>Novos ônibus</p>
+            <span>veículos com Wi-Fi</span>
+          </div>
+          <div className={styles.statCard}>
+            <Shield size={24} className={styles.iconMuted} />
+            <h3>R$ 6,50</h3>
+            <p>Tarifa 2026</p>
+            <span>dinheiro ou digital</span>
+          </div>
+        </div>
+
+        <p className={styles.disclaimer}>
+          * Dados baseados em estimativas de 2025. ~6% da população de Caçapava (99.678 hab.) utiliza o transporte diariamente.
+        </p>
+
+        <div className={styles.missionVisionGrid}>
+          <div className={styles.missionCard}>
+            <h3><Target size={20} /> Missão</h3>
+            <ul>
+              <li>Dar voz aos usuários do transporte público</li>
+              <li>Transformar a espera invisível em dados acionáveis</li>
+              <li>Aumentar a previsibilidade e transparência do sistema</li>
+              <li>Fortalecer a pressão social por melhorias</li>
+            </ul>
+          </div>
+          <div className={styles.visionCard}>
+            <h3><Eye size={20} /> Visão</h3>
+            <ul>
+              <li>Transformar a mobilidade urbana por meio da transparência</li>
+              <li>Utilizar a inteligência coletiva para gerar mudança</li>
+              <li>Tornar o transporte público mais confiável e justo para todos</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className={styles.valuesSection}>
+          <h2>Nossos Valores</h2>
+          <p>O que guia cada decisão do MobTracker</p>
+
+          <div className={styles.valuesGrid}>
+             <div className={styles.valueCard}>
+               <Zap size={24} />
+               <h4>Transparência</h4>
+               <p>Dados abertos e acessíveis a todos os cidadãos</p>
+             </div>
+             <div className={styles.valueCard}>
+               <Share2 size={24} />
+               <h4>Colaboração</h4>
+               <p>A força da comunidade como motor de mudança</p>
+             </div>
+             <div className={styles.valueCard}>
+               <Heart size={24} />
+               <h4>Empatia</h4>
+               <p>Colocando o passageiro no centro de tudo</p>
+             </div>
+             <div className={styles.valueCard}>
+               <Target size={24} />
+               <h4>Impacto</h4>
+               <p>Cada dado coletado gera melhorias reais</p>
+             </div>
+          </div>
+        </div>
+
+        <div className={styles.contextBox}>
+          <div className={styles.contextHeader}>
+            <h3>Transporte em Caçapava</h3>
+            <p>Contexto e dados da cidade em 2025-2026</p>
+          </div>
+          <div className={styles.contextBody}>
+            <div>
+              <p style={{marginBottom: '1rem'}}>
+                <strong>6.000 passageiros/dia</strong> utilizam o transporte público municipal nos dias úteis, representando cerca de <strong>6% da população</strong> estimada de 99.678 habitantes (IBGE).
+              </p>
+              <p>
+                Em <strong>junho de 2025</strong>, a cidade concluiu a renovação de 100% da frota com <strong>16 novos ônibus</strong>, equipados com Wi-Fi, ar-condicionado e entradas USB.
+              </p>
+            </div>
+            <div>
+              <p style={{marginBottom: '1rem'}}>
+                A tarifa foi reajustada em <strong>janeiro de 2026 para R$ 6,50</strong>, válida para pagamento em dinheiro ou meios digitais.
+              </p>
+              <p>
+                O MobTracker nasce como resposta à falta de informação, dando ao cidadão uma ferramenta para acompanhar, avaliar e cobrar melhorias no transporte coletivo.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

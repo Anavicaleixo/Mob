@@ -1,0 +1,12 @@
+.footer {
+  background-color: #1C3A2E;
+  color: #94a3b8; /* A light grayish blue to match the image text color */
+  padding: 1.5rem 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  margin-top: auto; /* Push footer to bottom if flex container */
+}
+
+.footer p {
+  margin: 0;
+}
