@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ==========================================
+# FLUTTER/DART (adicione estas linhas)
+# ==========================================
+.dart_tool/
+.pub/
+build/
+linux/
+macos/
+windows/
+web/
+lib/
+test/
+*.iml
+*.dart
+pubspec.lock
+pubspec.yaml
+.metadata
+analysis_options.yaml
+
+# Arquivos específicos do Flutter
+**/generated_plugin_registrant.dart
+**/generated_plugin_registrant.cc
+**/generated_plugin_registrant.h
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
