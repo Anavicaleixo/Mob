@@ -431,3 +431,36 @@
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
 }
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2rem;
+  }
+  .hero {
+    padding: 3rem 1rem 2rem 1rem;
+  }
+  .stats {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .imageReferenceGrid {
+    grid-template-columns: 1fr;
+  }
+  .referenceCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cepFormGrid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cepSubmitBtn {
+    width: 100%;
+  }
+}
+

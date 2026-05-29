@@ -38,12 +38,10 @@ const COLORS = ['#1c4f36', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
 
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { linesDetailData } from '../data/linesData';
 import styles from './Admin.module.css';
 
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
-
 
 // ---------- AUXILIARY COMPONENTS ----------
 
@@ -62,25 +60,25 @@ function CardStat({ icon, title, subtitle, sub2, color = '#10b981' }) {
 
 function RankingItem({ pos, linha, desc, rel, tag, tagColor, tagText, star, progress }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', padding: '1rem', borderBottom: '1px solid #f1f5f9', gap: '1rem' }}>
-      <div style={{ width: '32px', fontWeight: 'bold', color: '#64748b' }}>{pos}</div>
-      <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-          <span style={{ fontWeight: '700', color: '#1e293b' }}>Linha {linha}</span>
-          <span style={{ fontSize: '0.75rem', padding: '0.15rem 0.5rem', borderRadius: '4px', background: tagColor, color: tagText, fontWeight: 'bold' }}>{tag}</span>
+    <div className={styles.rankingItem}>
+      <div className={styles.rankingPos}>{pos}</div>
+      <div className={styles.rankingInfo}>
+        <div className={styles.rankingHeader}>
+          <span className={styles.rankingLinha}>Linha {linha}</span>
+          <span className={styles.rankingTag} style={{ background: tagColor, color: tagText }}>{tag}</span>
         </div>
-        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{desc}</div>
+        <div className={styles.rankingDesc}>{desc}</div>
       </div>
-      <div style={{ width: '150px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginBottom: '0.25rem' }}>
-          <span style={{ color: '#64748b' }}>Popularidade</span>
-          <span style={{ color: '#10b981', fontWeight: '700' }}>{rel}</span>
+      <div className={styles.rankingPopularidade}>
+        <div className={styles.rankingPopularidadeHeader}>
+          <span>Popularidade</span>
+          <span className={styles.rankingRel}>{rel}</span>
         </div>
-        <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${progress}%`, background: 'linear-gradient(90deg, #10b981 0%, #34d399 100%)', borderRadius: '3px' }}></div>
+        <div className={styles.progressBar}>
+          <div className={styles.progressFill} style={{ width: `${progress}%` }}></div>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '800', color: '#10b981', fontSize: '1rem', background: '#ecfdf5', padding: '0.5rem 0.75rem', borderRadius: '12px' }}>
+      <div className={styles.rankingStar}>
         <Star size={16} fill="#10b981" color="#10b981" /> {star}
       </div>
     </div>
@@ -89,9 +87,56 @@ function RankingItem({ pos, linha, desc, rel, tag, tagColor, tagText, star, prog
 
 function MapClickHandler({ onClick }) {
   useMapEvents({
-    click(e) { onClick(e.latlng); }
+    click(e) { 
+      if (onClick && typeof onClick === 'function') {
+        onClick(e.latlng); 
+      }
+    }
   });
   return null;
+}
+
+// ---------- TABELA RESPONSIVA COMPONENT ----------
+function ResponsiveTable({ headers, data, renderRow, actions }) {
+  return (
+    <div className={styles.responsiveTableWrapper}>
+      <div className={styles.desktopTable}>
+        <table className={styles.modernTable}>
+          <thead>
+            <tr>
+              {headers.map((header, idx) => (
+                <th key={idx}>{header}</th>
+              ))}
+              {actions && <th>Ações</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item, idx) => renderRow(item, idx))}
+          </tbody>
+        </table>
+      </div>
+      
+      <div className={styles.mobileCards}>
+        {data.map((item, idx) => (
+          <div key={idx} className={styles.mobileCard}>
+            {headers.map((header, hidx) => (
+              <div key={hidx} className={styles.mobileCardRow}>
+                <span className={styles.mobileCardLabel}>{header}:</span>
+                <span className={styles.mobileCardValue}>
+                  {renderRow(item, idx).props.children[hidx]}
+                </span>
+              </div>
+            ))}
+            {actions && (
+              <div className={styles.mobileCardActions}>
+                {actions(item)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ---------- ABAS ----------
@@ -149,10 +194,12 @@ function VisaoGeralTab() {
         });
 
         const counts = [0, 0, 0, 0, 0];
-        lineRatings.forEach(r => {
-          const val = Math.round(r.rating_value);
-          if (val >= 1 && val <= 5) counts[val-1]++;
-        });
+        if (lineRatings && lineRatings.length > 0) {
+          lineRatings.forEach(r => {
+            const val = Math.round(r.rating_value);
+            if (val >= 1 && val <= 5) counts[val-1]++;
+          });
+        }
         
         setBarChartData([
           { name: '1★', uv: counts[0] },
@@ -179,7 +226,7 @@ function VisaoGeralTab() {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+    <div className={styles.visaoGeralContainer}>
       <div className={styles.statsGrid}>
         <CardStat icon={<Bell />} title={stats.alerts.toString()} subtitle="Alertas Ativos" color="#10b981" sub2="Oficiais do sistema" />
         <CardStat icon={<MessageSquare />} title={stats.reports.toString()} subtitle="Relatos de Usuários" color="#10b981" sub2={`${reports.filter(r => r.type === 'negative').length} críticas recebidas`} />
@@ -187,38 +234,42 @@ function VisaoGeralTab() {
         <CardStat icon={<Award />} title={stats.redemptions?.toString() || "0"} subtitle="Recompensas" color="#10b981" sub2={`${stats.totalPoints || 0} pts resgatados`} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+      <div className={styles.chartsGrid}>
         <div className={styles.tableContainer}>
-          <h3 className={styles.statTitle} style={{ marginBottom: '2rem' }}>Distribuição de Feedbacks</h3>
-          <div style={{ height: '300px', minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie 
-                  data={pieData} 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius={70} 
-                  outerRadius={110} 
-                  paddingAngle={8} 
-                  dataKey="value" 
-                  stroke="none"
-                  labelLine={false}
-                  label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}
-                >
-                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ background: 'white', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
-                  itemStyle={{ color: '#1e293b', fontWeight: 'bold' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className={styles.chartWrapper}>
+            <h3 className={styles.statTitle}>Distribuição de Feedbacks</h3>
+            <div className={styles.chartContainer}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={110}
+                    paddingAngle={8}
+                    dataKey="value"
+                    stroke="none"
+                    labelLine={false}
+                    label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ background: 'white', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                    itemStyle={{ color: '#1e293b', fontWeight: 'bold' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
 
         <div className={styles.tableContainer}>
-          <h3 className={styles.statTitle} style={{ marginBottom: '2rem' }}>Frequência de Notas</h3>
-          <div style={{ height: '300px', minWidth: 0 }}>
+          <h3 className={styles.statTitle}>Frequência de Notas</h3>
+          <div className={styles.chartContainer}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barChartData}>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
@@ -236,8 +287,10 @@ function VisaoGeralTab() {
           <h3 className={styles.statTitle}>Ranking de Engajamento por Linha</h3>
           <TrendingUp size={20} color="#10b981" />
         </div>
-        <div style={{ marginTop: '1rem' }}>
-          {loading ? <p>Processando estatísticas...</p> : (
+        <div className={styles.rankingList}>
+          {loading ? <p>Processando estatísticas...</p> : reports.length === 0 ? (
+            <p className={styles.emptyState}>Nenhum dado de relato ainda.</p>
+          ) : (
             lines
               .map(line => {
                 const lineReports = reports.filter(r => r.line_id === line.name || r.lineId === line.name);
@@ -250,12 +303,12 @@ function VisaoGeralTab() {
                   key={line.id}
                   pos={`#${idx + 1}`} 
                   linha={line.name} 
-                  desc={line.description} 
+                  desc={line.description || 'Sem descrição'} 
                   rel={line.reportsCount} 
                   tag={line.positiveCount > 0 ? "Popular" : "Estável"} 
                   tagColor={line.positiveCount > 0 ? "#dcfce7" : "#f1f5f9"} 
                   tagText={line.positiveCount > 0 ? "#166534" : "#64748b"} 
-                  star={(3.8 + Math.random() * 1.2).toFixed(1)}
+                  star={(3.8 + (line.reportsCount % 12) / 10).toFixed(1)}
                   progress={Math.min(100, (line.reportsCount / (reports.length || 1)) * 500)}
                 />
               ))
@@ -314,73 +367,126 @@ function UsuariosTab() {
     }
   };
 
+  const headers = ['Nome', 'E-mail', 'MobPontos', 'Cadastro'];
+  
+  const renderUserRow = (user) => (
+    <tr key={user.id}>
+      <td>
+        <div className={styles.userInfo}>
+          <div className={styles.userAvatar}>
+            {user.foto ? <img src={user.foto} alt="Av" /> : (user.nome ? user.nome[0].toUpperCase() : 'U')}
+          </div>
+          <span className={styles.userName}>{user.nome || 'Sem Nome'}</span>
+        </div>
+      </td>
+      <td className={styles.userEmail}>{user.email}</td>
+      <td><span className={styles.pointsBadge}>{user.points || 0} pts</span></td>
+      <td>{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}</td>
+      <td>
+        <div className={styles.actionButtons}>
+          <button className={styles.actionBtn} onClick={() => { setEditingUser(user); setFormData({ nome: user.nome || '', email: user.email, points: user.points || 0, password: '', foto: user.foto || null }); setShowModal(true); }} title="Editar">
+            <Edit2 size={16} color="#10b981" />
+          </button>
+          <button className={styles.actionBtn} onClick={() => handleDelete(user.id)} title="Excluir">
+            <Trash2 size={16} color="#10b981" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+
+  const userActions = (user) => (
+    <>
+      <button className={styles.actionBtn} onClick={() => { setEditingUser(user); setFormData({ nome: user.nome || '', email: user.email, points: user.points || 0, password: '', foto: user.foto || null }); setShowModal(true); }} title="Editar">
+        <Edit2 size={16} color="#10b981" />
+      </button>
+      <button className={styles.actionBtn} onClick={() => handleDelete(user.id)} title="Excluir">
+        <Trash2 size={16} color="#10b981" />
+      </button>
+    </>
+  );
+
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Gerenciar Usuários</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>{profiles.length} usuários cadastrados no sistema</p>
+          <h2>Gerenciar Usuários</h2>
+          <p className={styles.tableSubtitle}>{profiles.length} usuários cadastrados no sistema</p>
         </div>
         <button className={styles.primaryBtn} onClick={() => { setEditingUser(null); setFormData({ nome: '', email: '', points: 0, password: '', foto: null }); setShowModal(true); }}>
           <Plus size={18} /> Novo Usuário
         </button>
       </div>
 
-      {loading ? <p>Carregando...</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className={styles.modernTable}>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>MobPontos</th>
-                <th>Cadastro</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profiles.map(p => (
-                <tr key={p.id}>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#1c4f36', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 'bold', overflow: 'hidden' }}>
-                        {p.foto ? <img src={p.foto} alt="Av" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (p.nome ? p.nome[0] : 'U')}
-                      </div>
-                      <div style={{ fontWeight: '600' }}>{p.nome || 'Sem Nome'}</div>
-                    </div>
-                  </td>
-                  <td><div style={{ color: '#64748b', fontSize: '0.875rem' }}>{p.email}</div></td>
-                  <td>
-                    <span style={{ background: '#ecfdf5', color: '#059669', padding: '0.25rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: '700' }}>
-                      {p.points || 0} pts
-                    </span>
-                  </td>
-                  <td><div style={{ fontSize: '0.875rem' }}>{p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '-'}</div></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                      <button className={styles.actionBtn} onClick={() => { setEditingUser(p); setFormData({ nome: p.nome || '', email: p.email, points: p.points || 0, password: '', foto: p.foto || null }); setShowModal(true); }} title="Editar"><Edit2 size={16} color="#10b981" /></button>
-                      <button className={styles.actionBtn} onClick={() => handleDelete(p.id)} title="Excluir"><Trash2 size={16} color="#10b981" /></button>
-                    </div>
-                  </td>
+      {loading ? (
+        <p className={styles.loadingState}>Carregando...</p>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className={styles.desktopOnly}>
+            <table className={styles.modernTable}>
+              <thead>
+                <tr>
+                  {headers.map((header, idx) => <th key={idx}>{header}</th>)}
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {profiles.map(user => renderUserRow(user))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className={styles.mobileOnly}>
+            {profiles.map(user => (
+              <div key={user.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Nome:</span>
+                  <span className={styles.mobileCardValue}>
+                    <div className={styles.userInfo}>
+                      <div className={styles.userAvatar}>
+                        {user.foto ? <img src={user.foto} alt="Av" /> : (user.nome ? user.nome[0].toUpperCase() : 'U')}
+                      </div>
+                      <span>{user.nome || 'Sem Nome'}</span>
+                    </div>
+                  </span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>E-mail:</span>
+                  <span className={styles.mobileCardValue}>{user.email}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>MobPontos:</span>
+                  <span className={styles.mobileCardValue}>
+                    <span className={styles.pointsBadge}>{user.points || 0} pts</span>
+                  </span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Cadastro:</span>
+                  <span className={styles.mobileCardValue}>{user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : '-'}</span>
+                </div>
+                <div className={styles.mobileCardActions}>
+                  {userActions(user)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1.5rem' }}>{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ alignSelf: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ cursor: 'pointer', display: 'block' }}>
-                  <input type="file" style={{ display: 'none' }} accept="image/*" onChange={e => {
+            <h3>{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
+            <form onSubmit={handleSave}>
+              <div className={styles.avatarUpload}>
+                <label>
+                  <input type="file" accept="image/*" onChange={e => {
                     const file = e.target.files[0];
                     if (file) {
                       if (file.size > 5 * 1024 * 1024) {
-                        Swal.fire({ title: 'Atenção', text: 'A imagem deve ter menos de 5MB', icon: 'warning', confirmButtonColor: '#10b981' });
+                        Swal.fire({ title: 'Atenção', text: 'A imagem deve ter menos de 5MB', icon: 'warning' });
                         return;
                       }
                       const reader = new FileReader();
@@ -388,32 +494,32 @@ function UsuariosTab() {
                       reader.readAsDataURL(file);
                     }
                   }} />
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #cbd5e1', overflow: 'hidden' }}>
-                    {formData.foto ? <img src={formData.foto} alt="P" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={24} color="#94a3b8" />}
+                  <div className={styles.avatarPreview}>
+                    {formData.foto ? <img src={formData.foto} alt="Preview" /> : <Camera size={24} color="#94a3b8" />}
                   </div>
                 </label>
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Nome Completo</label>
                 <input className={styles.inputField} required value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} />
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>E-mail</label>
                 <input className={styles.inputField} type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
               </div>
               {!editingUser && (
-                <div>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Senha Temporária</label>
                   <input className={styles.inputField} type="password" required value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
                 </div>
               )}
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>MobPontos</label>
                 <input className={styles.inputField} type="number" required value={formData.points} onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })} />
               </div>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)} style={{ flex: 1 }}>Cancelar</button>
-                <button type="submit" className={styles.primaryBtn} style={{ flex: 1, justifyContent: 'center' }}>Salvar</button>
+              <div className={styles.modalButtons}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" className={styles.primaryBtn}>Salvar</button>
               </div>
             </form>
           </div>
@@ -460,7 +566,6 @@ function PontosTab() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      // Formata as linhas para garantir que sejam enviadas corretamente
       const formattedLines = formData.lines.split(',').map(s => s.trim()).filter(s => s !== '');
       
       const payload = { 
@@ -489,7 +594,6 @@ function PontosTab() {
       setShowModal(false);
       setEditingStop(null);
       loadStops();
-      // Limpa o formulário
       setFormData({ name: '', location: '', lat: -23.100, lng: -45.700, lines: '', cobertura: false, banco: false, acessivel: false });
     } catch (err) {
       console.error("Erro ao adicionar ponto:", err);
@@ -502,35 +606,86 @@ function PontosTab() {
     }
   };
 
+  const stopActions = (stop) => (
+    <>
+      <button className={styles.actionBtn} onClick={() => handleEdit(stop)} title="Editar">
+        <Edit2 size={16} color="#10b981" />
+      </button>
+      <button className={styles.actionBtn} onClick={() => handleDelete(stop.id)} title="Excluir">
+        <Trash2 size={16} color="#10b981" />
+      </button>
+    </>
+  );
+
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Pontos de Parada</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Gestão de terminais e pontos físicos</p>
+          <h2>Pontos de Parada</h2>
+          <p className={styles.tableSubtitle}>Gestão de terminais e pontos físicos</p>
         </div>
         <button className={styles.primaryBtn} onClick={() => { setEditingStop(null); setFormData({ name: '', location: '', lat: -23.100, lng: -45.700, lines: '', cobertura: false, banco: false, acessivel: false }); setShowModal(true); }}>
           <Plus size={18} /> Novo Ponto
         </button>
       </div>
 
-      {loading ? <p>Carregando...</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className={styles.modernTable}>
-            <thead>
-              <tr>
-                <th>Nome do Terminal/Ponto</th>
-                <th>Linhas Atendidas</th>
-                <th>Bairro</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stops.map(stop => (
-                <tr key={stop.id}>
-                  <td><div style={{ fontWeight: '600' }}>{stop.name}</div></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+      {loading ? (
+        <p className={styles.loadingState}>Carregando...</p>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className={styles.desktopOnly}>
+            <table className={styles.modernTable}>
+              <thead>
+                <tr>
+                  <th>Nome do Terminal/Ponto</th>
+                  <th>Linhas Atendidas</th>
+                  <th>Bairro</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stops.map(stop => (
+                  <tr key={stop.id}>
+                    <td><span className={styles.stopName}>{stop.name}</span></td>
+                    <td>
+                      <div className={styles.linesList}>
+                        {(() => {
+                          const linesData = stop.lines;
+                          let linesArray = [];
+                          if (Array.isArray(linesData)) linesArray = linesData;
+                          else if (typeof linesData === 'string') linesArray = linesData.split(',').map(s => s.trim());
+                          
+                          return linesArray.map(l => (
+                            <span key={l} className={styles.lineTag}>{l}</span>
+                          ));
+                        })()}
+                      </div>
+                    </td>
+                    <td>{stop.location}</td>
+                    <td>
+                      <div className={styles.actionButtons}>
+                        {stopActions(stop)}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className={styles.mobileOnly}>
+            {stops.map(stop => (
+              <div key={stop.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Nome:</span>
+                  <span className={styles.mobileCardValue}>{stop.name}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Linhas:</span>
+                  <span className={styles.mobileCardValue}>
+                    <div className={styles.linesList}>
                       {(() => {
                         const linesData = stop.lines;
                         let linesArray = [];
@@ -538,69 +693,69 @@ function PontosTab() {
                         else if (typeof linesData === 'string') linesArray = linesData.split(',').map(s => s.trim());
                         
                         return linesArray.map(l => (
-                          <span key={l} style={{ background: '#f1f5f9', color: '#475569', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 'bold' }}>{l}</span>
+                          <span key={l} className={styles.lineTag}>{l}</span>
                         ));
                       })()}
                     </div>
-                  </td>
-                  <td><div style={{ fontSize: '0.875rem', color: '#64748b' }}>{stop.location}</div></td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className={styles.actionBtn} onClick={() => handleEdit(stop)} title="Editar"><Edit2 size={16} color="#10b981" /></button>
-                      <button className={styles.actionBtn} onClick={() => handleDelete(stop.id)} title="Excluir"><Trash2 size={16} color="#10b981" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Bairro:</span>
+                  <span className={styles.mobileCardValue}>{stop.location}</span>
+                </div>
+                <div className={styles.mobileCardActions}>
+                  {stopActions(stop)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '480px', padding: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem' }}>{editingStop ? 'Editar Ponto' : 'Adicionar Ponto'}</h3>
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
+          <div className={styles.modalContent}>
+            <h3>{editingStop ? 'Editar Ponto' : 'Adicionar Ponto'}</h3>
+            <form onSubmit={handleSave}>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Nome do Ponto</label>
                   <input className={styles.inputField} required placeholder="Ex: Terminal Matriz" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                 </div>
-                <div>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Bairro</label>
                   <input className={styles.inputField} required value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />
                 </div>
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Linhas (separadas por vírgula)</label>
                 <input className={styles.inputField} required placeholder="Ex: 01, 04, 10" value={formData.lines} onChange={e => setFormData({...formData, lines: e.target.value})} />
               </div>
               
-              <div style={{ display: 'flex', gap: '1.5rem', background: '#f8fafc', padding: '1rem', borderRadius: '12px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+              <div className={styles.checkboxGroup}>
+                <label>
                   <input type="checkbox" checked={formData.cobertura} onChange={e => setFormData({...formData, cobertura: e.target.checked})} /> Cobertura
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <label>
                   <input type="checkbox" checked={formData.banco} onChange={e => setFormData({...formData, banco: e.target.checked})} /> Banco
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.875rem' }}>
+                <label>
                   <input type="checkbox" checked={formData.acessivel} onChange={e => setFormData({...formData, acessivel: e.target.checked})} /> Acessível
                 </label>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Latitude</label>
                   <input className={styles.inputField} type="number" step="any" value={formData.lat} onChange={e => setFormData({...formData, lat: parseFloat(e.target.value) || 0})} />
                 </div>
-                <div>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Longitude</label>
                   <input className={styles.inputField} type="number" step="any" value={formData.lng} onChange={e => setFormData({...formData, lng: parseFloat(e.target.value) || 0})} />
                 </div>
               </div>
 
-              <div style={{ height: '200px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+              <div className={styles.mapContainer}>
                 <MapContainer center={[formData.lat, formData.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                   <MapClickHandler onClick={(latlng) => setFormData({...formData, lat: latlng.lat, lng: latlng.lng})} />
@@ -608,9 +763,9 @@ function PontosTab() {
                 </MapContainer>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)} style={{ flex: 1 }}>Cancelar</button>
-                <button type="submit" className={styles.primaryBtn} style={{ flex: 1, justifyContent: 'center' }}>Salvar</button>
+              <div className={styles.modalButtons}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" className={styles.primaryBtn}>Salvar</button>
               </div>
             </form>
           </div>
@@ -635,11 +790,10 @@ function AlertasTab() {
     setLoading(true);
     try {
       const [alerts, linesData] = await Promise.all([storage.getAlerts(true), storage.getLines()]);
-      console.log('[Admin] Alertas carregados do banco:', alerts);
       setReports(alerts);
       setLines(linesData);
     } catch(e) {
-      console.error('[Admin] Erro ao carregar dados:', e);
+      console.error(e);
     } finally { 
       setLoading(false); 
     }
@@ -649,29 +803,14 @@ function AlertasTab() {
     e.preventDefault();
     try {
       if (editingAlert) {
-        const updated = await storage.updateAlert(editingAlert.id, formData, editingAlert.source);
-        
-        // Atualiza localmente o estado para garantir que a UI mude na hora
-        setReports(prev => prev.map(r => {
-          if (r.id === editingAlert.id) {
-            return { 
-              ...r, 
-              ...updated, 
-              source: editingAlert.source,
-              // Mantemos o autor virtual se for da tabela alerts
-              author: editingAlert.source === 'alerts' ? 'Admin MobTracker' : (updated.author || r.author)
-            };
-          }
-          return r;
-        }));
-
+        await storage.updateAlert(editingAlert.id, formData, editingAlert.source);
         Swal.fire({ title: 'Sucesso', text: 'Alerta atualizado!', icon: 'success', confirmButtonColor: '#10b981' });
       } else {
         await storage.addAlert({ ...formData, created_at: new Date().toISOString() });
         Swal.fire({ title: 'Sucesso', text: 'Alerta publicado!', icon: 'success', confirmButtonColor: '#10b981' });
       }
       setShowModal(false);
-      load(); // Recarga de segurança
+      load();
     } catch (err) {
       Swal.fire({ title: 'Erro', text: err.message, icon: 'error', confirmButtonColor: '#10b981' });
     }
@@ -711,52 +850,86 @@ function AlertasTab() {
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Centro de Mensagens</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Alertas oficiais e relatos da comunidade</p>
+          <h2>Centro de Mensagens</h2>
+          <p className={styles.tableSubtitle}>Alertas oficiais e relatos da comunidade</p>
         </div>
         <button className={styles.primaryBtn} onClick={() => { setEditingAlert(null); setFormData({ title: '', description: '', type: 'aviso', line_id: '' }); setShowModal(true); }}>
           <Plus size={18} /> Novo Alerta
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', margin: '1.5rem 0', background: '#f1f5f9', padding: '0.4rem', borderRadius: '12px', width: 'fit-content' }}>
-        <button onClick={() => setActiveFilter('admin')} style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: 'none', background: activeFilter === 'admin' ? 'white' : 'transparent', boxShadow: activeFilter === 'admin' ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none', color: activeFilter === 'admin' ? '#1c4f36' : '#64748b', fontWeight: '700', cursor: 'pointer' }}>Oficiais</button>
-        <button onClick={() => setActiveFilter('users')} style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: 'none', background: activeFilter === 'users' ? 'white' : 'transparent', boxShadow: activeFilter === 'users' ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none', color: activeFilter === 'users' ? '#1c4f36' : '#64748b', fontWeight: '700', cursor: 'pointer' }}>Comunidade</button>
+      <div className={styles.filterButtons}>
+        <button onClick={() => setActiveFilter('admin')} className={`${styles.filterBtn} ${activeFilter === 'admin' ? styles.activeFilter : ''}`}>Oficiais</button>
+        <button onClick={() => setActiveFilter('users')} className={`${styles.filterBtn} ${activeFilter === 'users' ? styles.activeFilter : ''}`}>Comunidade</button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+      <div className={styles.alertasGrid}>
         {displayList.map(r => (
-          <div key={r.id} style={{ background: 'white', padding: '1.5rem', borderRadius: '20px', border: '1px solid #f1f5f9', position: 'relative' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <span style={{ 
-                background: getTypeStyle(r.type).bg, 
-                color: getTypeStyle(r.type).text, 
-                padding: '0.2rem 0.6rem', 
-                borderRadius: '6px', 
-                fontSize: '0.7rem', 
-                fontWeight: '800', 
-                textTransform: 'uppercase' 
-              }}>
+          <div key={r.id} className={styles.alertaCard}>
+            <div className={styles.alertaHeader}>
+              <span className={styles.alertaType} style={{ background: getTypeStyle(r.type).bg, color: getTypeStyle(r.type).text }}>
                 {getTypeStyle(r.type).label}
               </span>
-              <div style={{ display: 'flex', gap: '0.25rem' }}>
-                <button className={styles.actionBtn} onClick={() => handleEdit(r)} title="Editar"><Edit2 size={16} color="#10b981" /></button>
-                <button className={styles.actionBtn} onClick={async () => { await storage.deleteAlert(r.id, r.source); load(); }} title="Excluir"><Trash2 size={16} color="#10b981" /></button>
+              <div className={styles.alertaActions}>
+                <button className={styles.actionBtn} onClick={async () => {
+  const { value: formValues } = await Swal.fire({
+    title: 'Editar Alerta',
+    html: `
+      <input id='swal-input-title' class='swal2-input' placeholder='Título' value='${r.title}'>
+      <textarea id='swal-input-desc' class='swal2-textarea' placeholder='Descrição'>${r.description}</textarea>
+      <select id='swal-input-type' class='swal2-select'>
+        <option value='aviso' ${r.type === 'aviso' ? 'selected' : ''}>Aviso</option>
+        <option value='alteracao' ${r.type === 'alteracao' ? 'selected' : ''}>Alteração</option>
+        <option value='nova_linha' ${r.type === 'nova_linha' ? 'selected' : ''}>Nova Linha</option>
+        <option value='info' ${r.type === 'info' ? 'selected' : ''}>Info</option>
+      </select>
+      <input id='swal-input-line' class='swal2-input' placeholder='ID da Linha' value='${r.line_id || ''}'>
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    preConfirm: () => {
+      const title = document.getElementById('swal-input-title').value.trim();
+      const description = document.getElementById('swal-input-desc').value.trim();
+      const type = document.getElementById('swal-input-type').value;
+      const line_id = document.getElementById('swal-input-line').value.trim();
+      if (!title || !description) {
+        Swal.showValidationMessage('Preencha título e descrição');
+      }
+      return { title, description, type, line_id };
+    }
+  });
+  if (formValues) {
+    // after successful update, show confirmation
+await Swal.fire({ title: 'Sucesso', text: 'Alerta atualizado!', icon: 'success', confirmButtonColor: '#093021' });
+load();
+  }
+}}><Edit2 size={16} color="#10b981" /></button>
+                <button className={styles.actionBtn} onClick={async () => {
+                   const res = await Swal.fire({
+                     title: 'Excluir Alerta?',
+                     text: 'Tem certeza que deseja remover este alerta?',
+                     icon: 'warning',
+                     showCancelButton: true,
+                     confirmButtonColor: '#ef4444'
+                   });
+                   if (res.isConfirmed) {
+                     await storage.deleteAlert(r.id, r.source);
+                     load();
+                   }
+                 }}><Trash2 size={16} color="#10b981" /></button>
               </div>
             </div>
-            <h4 style={{ fontWeight: '700', marginBottom: '0.5rem', color: '#1e293b' }}>{r.title || 'Alerta'}</h4>
-            <p style={{ fontSize: '0.875rem', color: '#64748b', lineHeight: '1.5', marginBottom: '1.25rem' }}>{r.description}</p>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#1c4f36', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.6rem' }}>{r.author ? r.author[0] : 'A'}</div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569' }}>{r.author}</span>
-                  <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 'bold' }}>
-                    {r.line_id ? `Linha: ${r.line_id}` : (r.location || 'Ponto de Ônibus')}
-                  </span>
+            <h4 className={styles.alertaTitle}>{r.title || 'Alerta'}</h4>
+            <p className={styles.alertaDescription}>{r.description}</p>
+            <div className={styles.alertaFooter}>
+              <div className={styles.alertaAuthor}>
+                <div className={styles.authorAvatar}>{r.author ? r.author[0] : 'A'}</div>
+                <div>
+                  <div className={styles.authorName}>{r.author}</div>
+                  <div className={styles.alertaLocation}>{r.line_id ? `Linha: ${r.line_id}` : (r.location || 'Ponto de Ônibus')}</div>
                 </div>
               </div>
-              <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>{new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
+              <span className={styles.alertaDate}>{new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
             </div>
           </div>
         ))}
@@ -764,14 +937,14 @@ function AlertasTab() {
 
       {showModal && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent} style={{ maxWidth: '480px', padding: '1.25rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '1.25rem' }}>{editingAlert ? 'Editar Alerta' : 'Novo Alerta'}</h3>
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
+          <div className={styles.modalContent}>
+            <h3>{editingAlert ? 'Editar Alerta' : 'Novo Alerta'}</h3>
+            <form onSubmit={handleSave}>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Título</label>
                 <input className={styles.inputField} required value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Tipo</label>
                 <select className={styles.inputField} value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
                   <option value="positivo">Positivo</option>
@@ -779,13 +952,13 @@ function AlertasTab() {
                   <option value="negativo">Negativo</option>
                 </select>
               </div>
-              <div>
+              <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Descrição</label>
                 <textarea className={styles.inputField} rows={3} required value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)} style={{ flex: 1 }}>Cancelar</button>
-                <button type="submit" className={styles.primaryBtn} style={{ flex: 1, justifyContent: 'center' }}>Publicar</button>
+              <div className={styles.modalButtons}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" className={styles.primaryBtn}>Publicar</button>
               </div>
             </form>
           </div>
@@ -801,7 +974,6 @@ function LinhasTab() {
   const [showModal, setShowModal] = useState(false);
   const [editingLine, setEditingLine] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '', route: '', popular: false });
-  const [coords, setCoords] = useState([]);
 
   useEffect(() => { loadLines(); }, []);
 
@@ -818,28 +990,22 @@ function LinhasTab() {
   const handleEdit = (line) => {
     setEditingLine(line);
     setFormData({ name: line.name, description: line.description, popular: !!line.popular });
-    try {
-      setCoords(JSON.parse(line.route) || []);
-    } catch(e) {
-      setCoords([]);
-    }
     setShowModal(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = { ...formData, route: JSON.stringify(coords) };
     
     if (editingLine) {
-      await storage.updateLine(editingLine.id, payload);
+      await storage.updateLine(editingLine.id, formData);
     } else {
-      await storage.addLine(payload);
+      await storage.addLine(formData);
     }
 
     Swal.fire({
       icon: 'success',
       title: editingLine ? 'Linha Atualizada!' : 'Linha Criada!',
-      text: 'O trajeto e as informações foram salvos.',
+      text: 'As informações foram salvas com sucesso.',
       confirmButtonColor: '#10b981',
       timer: 2000,
       showConfirmButton: false
@@ -847,104 +1013,116 @@ function LinhasTab() {
 
     setShowModal(false);
     setEditingLine(null);
-    setCoords([]);
     loadLines();
   };
+
+  const lineActions = (line) => (
+    <>
+      <button className={styles.actionBtn} onClick={() => handleEdit(line)} title="Editar">
+        <Edit2 size={16} color="#10b981" />
+      </button>
+      <button className={styles.actionBtn} onClick={() => handleDelete(line.id)} title="Excluir">
+        <Trash2 size={16} color="#10b981" />
+      </button>
+    </>
+  );
 
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Malha de Ônibus</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Rotas oficiais e traçados de GPS</p>
+          <h2>Malha de Ônibus</h2>
+          <p className={styles.tableSubtitle}>Rotas oficiais e traçados de GPS</p>
         </div>
-        <button className={styles.primaryBtn} onClick={() => { setEditingLine(null); setFormData({ name: '', description: '', popular: false }); setCoords([]); setShowModal(true); }}>
+        <button className={styles.primaryBtn} onClick={() => { setEditingLine(null); setFormData({ name: '', description: '', popular: false }); setShowModal(true); }}>
           <Plus size={18} /> Nova Linha
         </button>
       </div>
 
-      {loading ? <p>Carregando...</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className={styles.modernTable}>
-            <thead>
-              <tr>
-                <th>Linha</th>
-                <th>Descrição do Trajeto</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {lines.map(line => {
-                let pts = 0;
-                let rawRoute = line.route || line.trajeto || line.detalhes || line.extra_info;
-                
-                try { 
-                  const parsed = typeof rawRoute === 'string' ? JSON.parse(rawRoute) : rawRoute;
-                  if (Array.isArray(parsed)) {
-                    pts = parsed.length;
-                    line.route = JSON.stringify(parsed); // Normaliza para o resto do componente
-                  }
-                } catch(e) {}
-                return (
+      {loading ? (
+        <p className={styles.loadingState}>Carregando...</p>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className={styles.desktopOnly}>
+            <table className={styles.modernTable}>
+              <thead>
+                <tr>
+                  <th>Linha</th>
+                  <th>Descrição do Trajeto</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map(line => (
                   <tr key={line.id}>
-                    <td><div className={styles.lineBadge} style={{ background: '#1c4f36', color: 'white', display: 'inline-flex', padding: '0.2rem 0.6rem', borderRadius: '6px', fontWeight: '800' }}>{line.name}</div></td>
-                    <td><div style={{ fontSize: '0.875rem', color: '#1e293b', fontWeight: '500' }}>{line.description}</div></td>
+                    <td><span className={styles.lineBadge}>{line.name}</span></td>
+                    <td>{line.description}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className={styles.actionBtn} onClick={() => handleEdit(line)} title="Editar"><Edit2 size={16} color="#10b981" /></button>
-                        <button className={styles.actionBtn} onClick={() => handleDelete(line.id)} title="Excluir"><Trash2 size={16} color="#10b981" /></button>
+                      <div className={styles.actionButtons}>
+                        {lineActions(line)}
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className={styles.mobileOnly}>
+            {lines.map(line => (
+              <div key={line.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Linha:</span>
+                  <span className={styles.mobileCardValue}>
+                    <span className={styles.lineBadge}>{line.name}</span>
+                  </span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Descrição:</span>
+                  <span className={styles.mobileCardValue}>{line.description}</span>
+                </div>
+                <div className={styles.mobileCardActions}>
+                  {lineActions(line)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {showModal && (
-        <div className={styles.modalOverlay} style={{ backdropFilter: 'blur(8px)', backgroundColor: 'rgba(15, 23, 42, 0.65)' }}>
-          <div className={styles.modalContent} style={{ maxWidth: '440px', padding: '2rem', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-              <div style={{ padding: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px' }}>
-                <Route size={24} color="#10b981" />
-              </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#1e293b', margin: 0 }}>{editingLine ? 'Editar Linha' : 'Nova Linha'}</h3>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalIcon}>
+              <Route size={24} color="#10b981" />
             </div>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
-                  <Bus size={18} />
-                </div>
+            <h3>{editingLine ? 'Editar Linha' : 'Nova Linha'}</h3>
+            <form onSubmit={handleSubmit}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Número da Linha</label>
                 <input 
                   className={styles.inputField} 
-                  placeholder="Nº Linha" 
+                  placeholder="Ex: 01, 02, 10" 
                   required 
-                  style={{ paddingLeft: '3rem', height: '52px', borderRadius: '14px' }}
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                 />
               </div>
-
-              <div style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
-                  <MessageSquare size={18} />
-                </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Descrição</label>
                 <input 
                   className={styles.inputField} 
-                  placeholder="Descrição (ex: Centro X Rodoviária)" 
+                  placeholder="Ex: Centro X Rodoviária" 
                   required 
-                  style={{ paddingLeft: '3rem', height: '52px', borderRadius: '14px' }}
                   value={formData.description} 
                   onChange={e => setFormData({...formData, description: e.target.value})} 
                 />
               </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)} style={{ flex: 1, height: '48px', borderRadius: '14px', fontWeight: '700' }}>Cancelar</button>
-                <button type="submit" className={styles.primaryBtn} style={{ flex: 1, height: '48px', borderRadius: '14px', fontWeight: '700', justifyContent: 'center' }}>
+              <div className={styles.modalButtons}>
+                <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)}>Cancelar</button>
+                <button type="submit" className={styles.primaryBtn}>
                   {editingLine ? 'Atualizar' : 'Criar Linha'}
                 </button>
               </div>
@@ -970,36 +1148,71 @@ function SolicitacoesSenhaTab() {
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Segurança do Sistema</h2>
-          <p style={{ fontSize: '0.875rem', color: '#64748b' }}>Solicitações de redefinição de acesso</p>
+          <h2>Segurança do Sistema</h2>
+          <p className={styles.tableSubtitle}>Solicitações de redefinição de acesso</p>
         </div>
       </div>
 
-      {loading ? <p>Carregando...</p> : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className={styles.modernTable}>
-            <thead>
-              <tr>
-                <th>Usuário</th>
-                <th>Motivo Informado</th>
-                <th>Solicitado em</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map(req => (
-                <tr key={req.id}>
-                  <td><div style={{ fontWeight: '600' }}>{req.email}</div></td>
-                  <td><div style={{ fontSize: '0.875rem', color: '#64748b' }}>{req.reason}</div></td>
-                  <td><div style={{ fontSize: '0.875rem' }}>{new Date(req.created_at).toLocaleString('pt-BR')}</div></td>
-                  <td>
-                    <span style={{ padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: '800', background: req.status === 'pendente' ? '#f1f5f9' : '#ecfdf5', color: req.status === 'pendente' ? '#64748b' : '#059669' }}>{req.status}</span>
-                  </td>
+      {loading ? (
+        <p className={styles.loadingState}>Carregando...</p>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className={styles.desktopOnly}>
+            <table className={styles.modernTable}>
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>Motivo Informado</th>
+                  <th>Solicitado em</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {requests.map(req => (
+                  <tr key={req.id}>
+                    <td>{req.email}</td>
+                    <td>{req.reason}</td>
+                    <td>{new Date(req.created_at).toLocaleString('pt-BR')}</td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${req.status === 'pendente' ? styles.statusPendente : styles.statusResolvido}`}>
+                        {req.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className={styles.mobileOnly}>
+            {requests.map(req => (
+              <div key={req.id} className={styles.mobileCard}>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Usuário:</span>
+                  <span className={styles.mobileCardValue}>{req.email}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Motivo:</span>
+                  <span className={styles.mobileCardValue}>{req.reason}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Data:</span>
+                  <span className={styles.mobileCardValue}>{new Date(req.created_at).toLocaleString('pt-BR')}</span>
+                </div>
+                <div className={styles.mobileCardRow}>
+                  <span className={styles.mobileCardLabel}>Status:</span>
+                  <span className={styles.mobileCardValue}>
+                    <span className={`${styles.statusBadge} ${req.status === 'pendente' ? styles.statusPendente : styles.statusResolvido}`}>
+                      {req.status}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -1017,9 +1230,9 @@ export default function Admin() {
     { id: 'geral', label: 'Visão Geral', icon: <LayoutDashboard size={20} /> },
     { id: 'usuarios', label: 'Usuários', icon: <Users size={20} /> },
     { id: 'alertas', label: 'Alertas', icon: <Bell size={20} /> },
-    { id: 'pontos', label: 'Pontos de Parada', icon: <Navigation size={20} /> },
-    { id: 'linhas', label: 'Linhas de Ônibus', icon: <Route size={20} /> },
-    { id: 'senhas', label: 'Redefinição Senha', icon: <Key size={20} /> },
+    { id: 'pontos', label: 'Pontos', icon: <Navigation size={20} /> },
+    { id: 'linhas', label: 'Linhas', icon: <Route size={20} /> },
+    { id: 'senhas', label: 'Senhas', icon: <Key size={20} /> },
   ];
 
   return (
@@ -1037,16 +1250,16 @@ export default function Admin() {
               onClick={() => setActiveTab(item.id)}
             >
               {item.icon}
-              {item.label}
-              {activeTab === item.id && <ChevronRight size={16} style={{ marginLeft: 'auto' }} />}
+              <span>{item.label}</span>
+              {activeTab === item.id && <ChevronRight size={16} className={styles.navChevron} />}
             </div>
           ))}
         </nav>
 
-        <div style={{ marginTop: 'auto', padding: '1rem' }}>
-          <div className={styles.navItem} onClick={logout} style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)' }}>
+        <div className={styles.logoutButton}>
+          <div className={styles.navItem} onClick={logout}>
             <LogOut size={20} color="#10b981" />
-            Sair do Painel
+            <span>Sair</span>
           </div>
         </div>
       </aside>
@@ -1054,22 +1267,22 @@ export default function Admin() {
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.welcomeSection}>
-            <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', display: 'block' }}>Dashboard Administrativo</span>
+            <span className={styles.welcomeBadge}>Dashboard Administrativo</span>
             <h2>{menuItems.find(m => m.id === activeTab).label}</h2>
             <p>Seja bem-vindo ao painel administrativo do MobTracker.</p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ textAlign: 'right', marginRight: '1rem' }}>
-              <div style={{ fontWeight: '800', fontSize: '0.9rem', color: '#1e293b' }}>Administrador</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>{user.email}</div>
+          <div className={styles.adminInfo}>
+            <div className={styles.adminText}>
+              <div className={styles.adminName}>Administrador</div>
+              <div className={styles.adminEmail}>{user.email}</div>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'linear-gradient(135deg, #1c4f36 0%, #064e3b 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '1.2rem', boxShadow: '0 4px 12px rgba(28, 79, 54, 0.2)' }}>
+            <div className={styles.adminAvatar}>
               {user.email ? user.email[0].toUpperCase() : 'A'}
             </div>
           </div>
         </header>
 
-        <div style={{ animation: 'fadeIn 0.4s ease-out' }}>
+        <div className={styles.tabContent}>
           {activeTab === 'geral' && <VisaoGeralTab />}
           {activeTab === 'usuarios' && <UsuariosTab />}
           {activeTab === 'alertas' && <AlertasTab />}

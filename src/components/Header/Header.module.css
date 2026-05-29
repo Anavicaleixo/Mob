@@ -67,3 +67,22 @@
   background-color: #059669;
   transform: translateY(-1px);
 }
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    order: 3;
+    gap: 0.5rem;
+  }
+  .nav a {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+  }
+}

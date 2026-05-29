@@ -8,25 +8,42 @@ import {
   Filter, 
   ChevronRight,
   ShieldAlert,
-  Wrench,
   Activity,
   RefreshCw,
-  X
+  X,
+  Trash2,
+  Plus,
+  Edit2,
+  Save,
+  XCircle
 } from 'lucide-react';
 import { storage } from '../services/storage';
 import styles from './Alertas.module.css';
+import Swal from 'sweetalert2';
 
 export default function Alertas() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
-  const [selectedAlert, setSelectedAlert] = useState(null);
+  // Removed modal state; details now shown via SweetAlert
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingAlert, setEditingAlert] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    type: 'info',
+    location: ''
+  });
 
   useEffect(() => {
     async function loadAlerts() {
       try {
         const data = await storage.getAlerts();
         setAlerts(data);
+        
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setIsAdmin(currentUser?.isAdmin || false);
       } catch (err) {
         console.error("Erro ao carregar alertas:", err);
       } finally {
@@ -104,6 +121,152 @@ export default function Alertas() {
     }
   };
 
+  const handleCreateAlert = async () => {
+    if (!formData.title || !formData.description) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Campos obrigatórios',
+        text: 'Preencha o título e a descrição do alerta.',
+        confirmButtonColor: '#1c4f36'
+      });
+      return;
+    }
+
+    try {
+      await storage.createAlert(formData);
+      const updatedAlerts = await storage.getAlerts();
+      setAlerts(updatedAlerts);
+      setShowCreateModal(false);
+      setFormData({ title: '', description: '', type: 'info', location: '' });
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Alerta criado!',
+        text: 'O alerta foi publicado com sucesso.',
+        confirmButtonColor: '#1c4f36',
+        timer: 2000
+      });
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro ao criar',
+        text: err.message,
+        confirmButtonColor: '#1c4f36'
+      });
+    }
+  };
+
+  const handleEditAlert = async () => {
+    if (!formData.title || !formData.description) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Campos obrigatórios',
+        text: 'Preencha o título e a descrição do alerta.',
+        confirmButtonColor: '#1c4f36'
+      });
+      return;
+    }
+
+    try {
+      await storage.updateAlert(editingAlert.id, formData);
+      const updatedAlerts = await storage.getAlerts();
+      setAlerts(updatedAlerts);
+      setEditingAlert(null);
+      setFormData({ title: '', description: '', type: 'info', location: '' });
+      
+      if (selectedAlert?.id === editingAlert.id) {
+        setSelectedAlert(null);
+      }
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Alerta atualizado!',
+        text: 'O alerta foi atualizado com sucesso.',
+        confirmButtonColor: '#1c4f36',
+        timer: 2000
+      });
+    } catch (err) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erro ao atualizar',
+        text: err.message,
+        confirmButtonColor: '#1c4f36'
+      });
+    }
+  };
+
+  const handleViewDetails = async (alert) => {
+    const guidance = getGuidance(alert.type).join('<br/>');
+    await Swal.fire({
+      title: `<strong>${alert.title}</strong>`,
+      html: `
+        <p>${alert.description}</p>
+        <hr/>
+        <p><strong>Local:</strong> ${alert.location || 'Geral'}</p>
+        <p><strong>Publicado em:</strong> ${new Date(alert.created_at).toLocaleString('pt-BR')}</p>
+        <p><strong>Orientações:</strong><br/>${guidance}</p>
+      `,
+      icon: 'info',
+      confirmButtonColor: '#1c4f36',
+      width: '500px',
+      showCloseButton: true
+    });
+  };
+
+  const handleDeleteAlert = async (alert) => {
+    const result = await Swal.fire({
+      title: 'Excluir Alerta',
+      html: `
+        <div style="text-align: left;">
+          <p>Tem certeza que deseja excluir este alerta?</p>
+          <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-top: 12px;">
+            <strong style="color: #1C3A2E;">${alert.title}</strong>
+            <p style="font-size: 14px; color: #64748b; margin-top: 8px;">${alert.description.substring(0, 100)}...</p>
+          </div>
+          <p style="color: #dc2626; margin-top: 12px; font-size: 14px;">⚠️ Esta ação não pode ser desfeita!</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sim, excluir',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await storage.deleteAlert(alert.id);
+        setAlerts(prevAlerts => prevAlerts.filter(a => a.id !== alert.id));
+        
+        await Swal.fire({
+          icon: 'success',
+          title: 'Excluído!',
+          text: 'O alerta foi removido com sucesso.',
+          confirmButtonColor: '#1c4f36',
+          timer: 2000
+        });
+      } catch (err) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erro ao excluir',
+          text: err.message,
+          confirmButtonColor: '#1c4f36'
+        });
+      }
+    }
+  };
+
+  const openEditModal = (alert) => {
+    setEditingAlert(alert);
+    setFormData({
+      title: alert.title,
+      description: alert.description,
+      type: alert.type,
+      location: alert.location || ''
+    });
+  };
+
   const filteredAlerts = filter === 'todos' 
     ? alerts 
     : alerts.filter(a => a.type === filter);
@@ -142,6 +305,14 @@ export default function Alertas() {
               {f === 'todos' ? 'Todos' : getCategoryLabel(f)}
             </button>
           ))}
+          {isAdmin && (
+            <button 
+              className={`${styles.pill} ${styles.createBtn}`}
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus size={16} /> Novo Alerta
+            </button>
+          )}
         </div>
       </div>
 
@@ -160,6 +331,24 @@ export default function Alertas() {
                     <span className={styles.categoryName}>{getCategoryLabel(alert.type)}</span>
                     <span className={styles.alertTime}>{getTimeAgo(alert.created_at)}</span>
                   </div>
+                  {isAdmin && (
+                    <div className={styles.cardActions}>
+                      <button 
+                        className={styles.editBtn}
+                        onClick={() => openEditModal(alert)}
+                        title="Editar alerta"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button 
+                        className={styles.deleteBtn}
+                        onClick={() => handleDeleteAlert(alert)}
+                        title="Excluir alerta"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className={styles.cardBody}>
@@ -174,7 +363,7 @@ export default function Alertas() {
                   </div>
                   <button 
                     className={styles.detailsBtn}
-                    onClick={() => setSelectedAlert(alert)}
+                    onClick={() => handleViewDetails(alert)}
                   >
                     Ver detalhes <ChevronRight size={16} />
                   </button>
@@ -190,83 +379,155 @@ export default function Alertas() {
         )}
       </main>
 
-      {/* Modal de Detalhes */}
-      {selectedAlert && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedAlert(null)}>
-          <div className={`${styles.modalContent} ${styles[selectedAlert.type] || ''}`} onClick={e => e.stopPropagation()}>
-            <button className={styles.modalClose} onClick={() => setSelectedAlert(null)}>
+      {/* Modal de Criar Alerta */}
+      {showCreateModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowCreateModal(false)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setShowCreateModal(false)}>
               <X size={24} />
             </button>
-
+            
             <div className={styles.modalHeader}>
-              <div className={`${styles.iconBox} ${styles[selectedAlert.type]}`}>
-                {getIcon(selectedAlert.type)}
+              <div className={styles.iconBox}>
+                <Plus size={24} />
               </div>
               <div>
-                <span className={styles.modalCategory}>{getCategoryLabel(selectedAlert.type)}</span>
-                <h2 className={styles.modalTitle}>{selectedAlert.title}</h2>
+                <h2 className={styles.modalTitle}>Criar Novo Alerta</h2>
               </div>
             </div>
 
             <div className={styles.modalBody}>
-              <div className={styles.detailGrid}>
-                <div className={styles.detailItem}>
-                  <Clock size={18} />
-                  <div className={styles.detailText}>
-                    <label>Publicado em</label>
-                    <span>{new Date(selectedAlert.created_at).toLocaleString('pt-BR')}</span>
-                  </div>
-                </div>
-                
-                <div className={styles.detailItem}>
-                  <MapPin size={18} />
-                  <div className={styles.detailText}>
-                    <label>Local afetado</label>
-                    <span>{selectedAlert.location || 'Geral'}</span>
-                  </div>
-                </div>
-
-                <div className={styles.detailItem}>
-                  <Activity size={18} />
-                  <div className={styles.detailText}>
-                    <label>Status</label>
-                    <span className={styles.statusBadge}>Em andamento</span>
-                  </div>
-                </div>
-
-                <div className={styles.detailItem}>
-                  <AlertTriangle size={18} />
-                  <div className={styles.detailText}>
-                    <label>Nível de Impacto</label>
-                    <span className={styles.impactText}>Moderado</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className={styles.descriptionBox}>
-                <h3>Ocorrência Detalhada</h3>
-                <p>{selectedAlert.description}</p>
+              <div className={styles.formGroup}>
+                <label>Tipo de Alerta</label>
+                <select 
+                  value={formData.type}
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  className={styles.select}
+                >
+                  <option value="info">Informativo</option>
+                  <option value="aviso">Aviso</option>
+                  <option value="alteracao">Alteração</option>
+                  <option value="nova_linha">Nova Linha</option>
+                </select>
               </div>
 
-              <div className={styles.guidanceBox}>
-                <h3>Orientações ao Passageiro</h3>
-                <ul>
-                  {getGuidance(selectedAlert.type).map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
+              <div className={styles.formGroup}>
+                <label>Título</label>
+                <input 
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className={styles.input}
+                  placeholder="Digite o título do alerta"
+                />
               </div>
 
-              <div className={styles.sourceFooter}>
-                <ShieldAlert size={14} />
-                <span>Fonte: Centro de Monitoramento MobTracker</span>
+              <div className={styles.formGroup}>
+                <label>Descrição</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className={styles.textarea}
+                  rows="4"
+                  placeholder="Descreva o alerta detalhadamente"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Localização (opcional)</label>
+                <input 
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  className={styles.input}
+                  placeholder="Ex: Centro, Zona Sul, etc."
+                />
               </div>
             </div>
 
             <div className={styles.modalFooter}>
-              <button className={styles.primaryBtn} onClick={() => setSelectedAlert(null)}>
-                Entendido
+              <button className={styles.secondaryBtn} onClick={() => setShowCreateModal(false)}>
+                Cancelar
               </button>
+              <button className={styles.primaryBtn} onClick={handleCreateAlert}>
+                Publicar Alerta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Editar Alerta */}
+      {editingAlert && (
+        <div className={styles.modalOverlay} onClick={() => setEditingAlert(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <button className={styles.modalClose} onClick={() => setEditingAlert(null)}>
+              <X size={24} />
+            </button>
+            
+            <div className={styles.modalHeader}>
+              <div className={styles.iconBox}>
+                <Edit2 size={24} />
+              </div>
+              <div>
+                <h2 className={styles.modalTitle}>Editar Alerta</h2>
+              </div>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.formGroup}>
+                <label>Tipo de Alerta</label>
+                <select 
+                  value={formData.type}
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  className={styles.select}
+                >
+                  <option value="info">Informativo</option>
+                  <option value="aviso">Aviso</option>
+                  <option value="alteracao">Alteração</option>
+                  <option value="nova_linha">Nova Linha</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Título</label>
+                <input 
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Descrição</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className={styles.textarea}
+                  rows="4"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Localização (opcional)</label>
+                <input 
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  className={styles.input}
+                />
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button className={styles.secondaryBtn} onClick={() => setEditingAlert(null)}>
+                Cancelar
+              </button>
+              <button className={styles.primaryBtn} onClick={handleEditAlert}>
+                Salvar Alterações
+              </button>
+              {/* SweetAlert is used for detail view; modal removed */}
             </div>
           </div>
         </div>

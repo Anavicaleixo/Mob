@@ -81,7 +81,7 @@ export default function LineModal({ lineDetail, onClose }) {
   const [reportDescription, setReportDescription] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
 
-  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [showRatingForm, setShowRatingForm] = useState(true);
   const [lineRating, setLineRating] = useState(0);
   const [driverRating, setDriverRating] = useState(0);
   const [avgRatings, setAvgRatings] = useState({ avgLine: 0, avgDriver: 0, total: 0 });
@@ -415,13 +415,6 @@ export default function LineModal({ lineDetail, onClose }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <h2 className={styles.modalTitle}>{title}</h2>
-                <button 
-                  className={styles.registerTripBtn} 
-                  onClick={handleRegisterTrip}
-                  title="Registrar que estou nesta linha agora (+20 pts)"
-                >
-                  <Bus size={14} /> Registrar Viagem
-                </button>
               </div>
               <p className={styles.modalDescription}>{description}</p>
             </div>
@@ -432,6 +425,11 @@ export default function LineModal({ lineDetail, onClose }) {
         </div>
 
         <div className={styles.modalBody}>
+          { (loadingReports || loadingRatings) && (
+            <div className={styles.loadingOverlay} style={{display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem'}}>
+              <span>Carregando informações...</span>
+            </div>
+          ) }
           {/* Extension info */}
           {extension && (
             <div className={styles.extensionBanner}>
@@ -522,8 +520,7 @@ export default function LineModal({ lineDetail, onClose }) {
           <div className={styles.reportsSection} style={{ borderTop: 'none', paddingTop: 0, marginTop: '1rem' }}>
             <div 
               className={styles.reportsHeader} 
-              style={{ cursor: 'pointer', userSelect: 'none', marginBottom: showRatingForm ? '1rem' : '0' }} 
-              onClick={() => setShowRatingForm(!showRatingForm)}
+              style={{ marginBottom: '1rem' }} 
             >
               <h3 className={styles.sectionTitle}>
                 <Star size={16} /> Avaliações da Linha
@@ -533,9 +530,6 @@ export default function LineModal({ lineDetail, onClose }) {
                   <Bus size={12} color="#1c4f36" /> {avgRatings.avgDriver || '0.0'}
                 </span>
               </h3>
-              <div style={{ color: '#64748b', display: 'flex', alignItems: 'center' }}>
-                {showRatingForm ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
             </div>
 
             {showRatingForm && (

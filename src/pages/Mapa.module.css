@@ -117,10 +117,61 @@
   cursor: pointer;
 }
 
-.heroButtons {
-  display: flex;
-  gap: 1rem;
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  /* Stack hero and main content vertically */
+  .hero {
+    height: auto;
+    padding: 2rem 5%;
+    text-align: center;
+  }
+  .heroContent {
+    max-width: 100%;
+  }
+  .searchContainer {
+    width: 100%;
+    max-width: none;
+    margin: 0 auto 1rem;
+  }
+  .mainContent {
+    padding: 2rem 5%;
+  }
+  .mapWrapper {
+    height: 300px;
+  }
+  .stopsListContainer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .stopCardList {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .stopIconBox {
+    width: 40px;
+    height: 40px;
+  }
+  .stopMainInfo {
+    width: 100%;
+  }
+  .stopTitle {
+    font-size: 1rem;
+  }
+  .stopSubInfo {
+    font-size: 0.75rem;
+  }
+  .viewToggles {
+    flex-wrap: wrap;
+  }
+  .heroButtons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
+
 
 .pillButton {
   display: flex;
@@ -500,6 +551,11 @@
 
 .modalContent::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 1rem;
 }
 
 .reportActions {
@@ -1828,3 +1884,41 @@
 .arrivalTimeText strong {
   color: #1e293b;
 }
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+  .hero {
+    height: auto;
+    padding: 3rem 1rem;
+  }
+  .searchContainer {
+    flex-direction: column;
+    border-radius: 20px;
+  }
+  .heroButtons {
+    flex-direction: column;
+    width: 100%;
+  }
+  .pillButton {
+    justify-content: center;
+  }
+  .mapWrapper {
+    height: 400px;
+  }
+  .mainContent {
+    padding: 2rem 1rem;
+  }
+  .infraGrid {
+    grid-template-columns: 1fr;
+  }
+  .cepFormGrid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cepSubmitBtn {
+    width: 100%;
+  }
+}
+

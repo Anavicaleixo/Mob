@@ -632,24 +632,7 @@ export const storage = {
   async addTrip(userId, lineId) {
     if (!userId) throw new Error("Usuário não autenticado");
 
-    // 1. Verificar limite diário (2 viagens por dia)
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const { count, error: countError } = await supabase
-      .from('trips')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', startOfDay.toISOString())
-      .lte('created_at', endOfDay.toISOString());
-
-    if (countError) {
-      console.error("Erro ao verificar limite de viagens:", countError);
-    } else if (count >= 2) {
-      throw new Error("Limite diário atingido! Você só pode registrar 2 viagens por dia.");
-    }
+    // 1. No daily trip limit enforced (unlimited trips)
 
     // 2. Validar se a linha é oficial (01, 04, 05, 06, 07, 08, 09, 10, 13)
     const validLines = ['01', '04', '05', '06', '07', '08', '09', '10', '13'];

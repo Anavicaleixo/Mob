@@ -212,14 +212,18 @@
 }
 
 @media (max-width: 768px) {
+  .hero {
+    padding: 3rem 1rem 2rem 1rem;
+  }
   .heroTitle {
     font-size: 2.2rem;
   }
-
+  .content {
+    padding: 0 1rem;
+  }
   .alertBox {
     padding: 1.5rem;
   }
-
   .statsGrid {
     grid-template-columns: 1fr;
   }

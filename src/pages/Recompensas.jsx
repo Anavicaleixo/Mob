@@ -20,8 +20,9 @@ import {
   Clock,
   ArrowUpRight
 } from 'lucide-react';
-import { storage } from '../services/storage';
+import { Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { storage } from '../services/storage';
 import Swal from 'sweetalert2';
 import styles from './Recompensas.module.css';
 
@@ -146,6 +147,43 @@ export default function Recompensas() {
     loadData();
   }, [user]);
 
+  const generatePassport = (pass) => {
+    // Create a canvas to render the passport as an image
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    // Define canvas size (adjust as needed)
+    canvas.width = 600;
+    canvas.height = 400;
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Text styling
+    ctx.fillStyle = '#000000';
+    ctx.font = '20px Arial';
+    ctx.textBaseline = 'top';
+    // Write passport information
+    ctx.fillText('Passaporte', 20, 30);
+    ctx.fillText(`Título: ${pass.title}`, 20, 70);
+    ctx.fillText(`Descrição: ${pass.description || pass.desc}`, 20, 110);
+    ctx.fillText(`Código: ${pass.id}-${new Date().toISOString()}`, 20, 150);
+    // Convert canvas to PNG blob and trigger download
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${pass.title.replace(/\s+/g, '_')}_passport.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, 'image/png');
+  };
+
+  const downloadPassDocument = () => {
+    const a = document.createElement('a');
+    a.href = 'passee.png';
+    a.download = 'passee.png';
+    a.click();
+  };
+
   const handleRedeem = async (reward) => {
     if (currentPoints < reward.cost) return;
 
@@ -165,6 +203,7 @@ export default function Recompensas() {
 
     try {
       await storage.redeemReward(user.id, reward.id, reward.cost, reward.title);
+      generatePassport(reward);
       Swal.fire({
         icon: 'success',
         iconColor: '#10b981',
@@ -415,6 +454,11 @@ export default function Recompensas() {
                     <span className={styles.availableBadge}>Disponível</span>
                   ) : (
                     <span className={styles.missingBadge}>Faltam {pass.cost - currentPoints} pts</span>
+                  )}
+                  {pass.id === 1 && (
+                    <button className={styles.downloadBtn} onClick={e => { e.stopPropagation(); downloadPassDocument(); }} title="Baixar documento">
+                      <Download size={16} color="#10b981" />
+                    </button>
                   )}
                 </div>
               </div>

@@ -8,11 +8,12 @@ import {
   Flag, Map as MapIcon, AlertTriangle, Star, Search, MapPin, 
   Navigation, Clock, DollarSign, ArrowRight, X, ChevronRight, 
   Locate, Route, Menu, RefreshCw, Play, ArrowLeftRight, Bus, Activity,
-  MessageSquare, Plus, Umbrella, Accessibility, Armchair, Info, PlayCircle, CheckCircle, Bell, Heart, MessageCircle, ThumbsDown
+  MessageSquare, Plus, Umbrella, Accessibility, Armchair, Info, PlayCircle, CheckCircle, Bell, Heart, MessageCircle, ThumbsDown, Minus
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { storage } from '../services/storage';
+import { fetchNearbyBusStops } from '../services/placesService';
 import { trafficService } from '../services/trafficService';
 import Swal from 'sweetalert2';
 import styles from './Mapa.module.css';
@@ -140,6 +141,7 @@ const MapFollower = ({ trackedBusId, liveBuses }) => {
 
 export default function Mapa() {
   const navigate = useNavigate();
+  const [zoomLevel, setZoomLevel] = useState(14);
   const [stops, setStops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -622,6 +624,7 @@ export default function Mapa() {
       if (result.coords) {
         localStorage.setItem('mobtracker_user_location', JSON.stringify(result.coords));
         setUserLocation(result.coords); 
+        setActiveTab('nearby');
         setStops(prev => [...prev]); 
         
         if (mapRef.current) {
@@ -676,36 +679,68 @@ export default function Mapa() {
   }, [activeTab]);
 
   useEffect(() => {
-    let filtered = stops;
-    
-    // Filtro por texto
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      filtered = filtered.filter(s => 
-        s.name?.toLowerCase().includes(q) || 
-        s.location?.toLowerCase().includes(q) ||
-        (Array.isArray(s.lines) && s.lines.some(l => l.toString().toLowerCase().includes(q)))
-      );
-    }
-
-    // Filtros de infraestrutura
-    if (filterCoverage) {
-      filtered = filtered.filter(s => s.infra?.cobertura);
-    }
-    if (filterBench) {
-      filtered = filtered.filter(s => s.infra?.banco);
-    }
-    if (filterAccessible) {
-      filtered = filtered.filter(s => s.infra?.acessivel);
-    }
-
-    // Filtro de Favoritos (vindo do Perfil ou toggle manual)
-    if (showOnlyFavorites) {
-      filtered = filtered.filter(s => favorites.includes(s.id?.toString()) || favorites.includes(Number(s.id)));
-    }
-
-    setFilteredStops(filtered);
-  }, [searchTerm, stops, filterCoverage, filterBench, filterAccessible, showOnlyFavorites, favorites]);
+    // Reset filtered stops when tab or location changes
+    const loadNearby = async () => {
+      if (activeTab === 'nearby' && userLocation) {
+        // Try Google Places API first (2km radius)
+        // The service already computes Haversine distToUser and filters to 2km
+        let apiStops = await fetchNearbyBusStops(userLocation.lat, userLocation.lng, 2000);
+        
+        let transformed;
+        if (apiStops.length > 0) {
+          // Transform API results to match our stop shape — distToUser comes pre-computed
+          transformed = apiStops
+            .map(place => ({
+              id: place.place_id,
+              name: place.name,
+              location: place.vicinity || '',
+              lat: Number(place.geometry.location.lat),
+              lng: Number(place.geometry.location.lng),
+              lines: [], // no line info from Places API
+              distToUser: place.distToUser // already computed by the service
+            }))
+            .slice(0, 6);
+        } else {
+          // Fallback: use local stops with Haversine distance, filter within 2km
+          transformed = stops
+            .filter(s => s && s.lat && s.lng)
+            .map(stop => ({
+              ...stop,
+              distToUser: getDistance(userLocation.lat, userLocation.lng, stop.lat, stop.lng)
+            }))
+            .filter(s => s.distToUser <= 2000)
+            .sort((a, b) => a.distToUser - b.distToUser)
+            .slice(0, 6);
+        }
+        
+        if (import.meta.env.DEV) {
+          console.log('[Mapa] Nearby stops loaded:', transformed.length, 'within 2km', apiStops.length > 0 ? '(API)' : '(local fallback)');
+          transformed.forEach(s => console.log(`  → ${s.name}: ${Math.round(s.distToUser)}m`));
+        }
+        setFilteredStops(transformed);
+      } else if (activeTab !== 'nearby') {
+        // Existing filters for other tabs
+        let filtered = stops;
+        if (searchTerm) {
+          const q = searchTerm.toLowerCase();
+          filtered = filtered.filter(s =>
+            s.name?.toLowerCase().includes(q) ||
+            s.location?.toLowerCase().includes(q) ||
+            (Array.isArray(s.lines) && s.lines.some(l => l.toString().toLowerCase().includes(q)))
+          );
+        }
+        if (filterCoverage) filtered = filtered.filter(s => s.infra?.cobertura);
+        if (filterBench) filtered = filtered.filter(s => s.infra?.banco);
+        if (filterAccessible) filtered = filtered.filter(s => s.infra?.acessivel);
+        if (showOnlyFavorites) filtered = filtered.filter(s => favorites.includes(s.id?.toString()) || favorites.includes(Number(s.id)));
+        setFilteredStops(filtered);
+      } else {
+        // nearby tab but no user location yet
+        setFilteredStops([]);
+      }
+    };
+    loadNearby();
+  }, [activeTab, userLocation, searchTerm, stops, filterCoverage, filterBench, filterAccessible, showOnlyFavorites, favorites]);
 
   const toggleFavorite = async (stopId) => {
     // Se logado, salva no banco
@@ -1203,12 +1238,26 @@ export default function Mapa() {
                       >
                         <Locate size={18} />
                       </button>
+                      <button 
+                        className={styles.layerBtn}
+                        onClick={() => setZoomLevel(prev => Math.min(prev + 1, 18))}
+                        title="Aproximar"
+                      >
+                        <Search size={18} />
+                      </button>
+                      <button 
+                        className={styles.layerBtn}
+                        onClick={() => setZoomLevel(prev => Math.max(prev - 1, 5))}
+                        title="Afastar"
+                      >
+                        <Minus size={18} />
+                      </button>
                     </div>
                   </div>
 
                   <MapContainer 
                     center={[-23.100, -45.700]} 
-                    zoom={14} 
+                    zoom={zoomLevel} 
                     style={{ height: '100%', width: '100%' }}
                     ref={mapRef}
                     zoomControl={false}
@@ -1245,7 +1294,8 @@ export default function Mapa() {
                       />
                     )}
                     
-                    {filteredStops.map((stop, idx) => {
+                    {filteredStops.length > 0 && 
+                    filteredStops.map((stop, idx) => {
                       if (!stop || !stop.lat || !stop.lng) return null;
                       const pos = [Number(stop.lat), Number(stop.lng)];
                       if (isNaN(pos[0]) || isNaN(pos[1])) return null;
@@ -1268,22 +1318,7 @@ export default function Mapa() {
                                 <MapPin size={14} style={{ marginRight: '4px' }} />
                                 {stop.location}
                               </p>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                {Array.isArray(stop.lines) && stop.lines.map(line => (
-                                  <div key={line} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                    <span style={{ 
-                                      background: '#f1f5f9', 
-                                      padding: '2px 8px', 
-                                      borderRadius: '4px', 
-                                      fontSize: '0.75rem', 
-                                      fontWeight: 'bold',
-                                      color: '#475569'
-                                    }}>
-                                      {line}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                              <> </>
                                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', color: '#f59e0b', fontWeight: 'bold' }}>
                                   <Star size={12} fill="#f59e0b" /> 
                                   <span>
@@ -1796,8 +1831,8 @@ export default function Mapa() {
                 className={styles.stopsListContainer}
                 key={userLocation ? `${userLocation.lat}-${userLocation.lng}` : 'initial'}
               >
-                    {nearbyStops.length > 0 ? (
-                      nearbyStops.map(stop => {
+                    {filteredStops.length > 0 ? (
+                      filteredStops.map(stop => {
                         // Find the bus of this line that is nearest to this stop
                         const lineBuses = liveBuses.filter(b => stop.lines.includes(b.lineName));
                         const incomingBus = lineBuses[0];
@@ -1822,7 +1857,7 @@ export default function Mapa() {
                                 <span>{incomingBus ? `Linha ${incomingBus.lineName} a caminho` : 'Consultando horários...'}</span>
                               </div>
                               <div className={styles.proximityInfo}>
-                                <span className={styles.distText}>{Math.round(stop.distToUser)}m de você</span>
+                                <span className={styles.distText}>{stop.distToUser >= 1000 ? `${(stop.distToUser / 1000).toFixed(1)}km` : `${Math.round(stop.distToUser)}m`} de você</span>
                                 <span className={styles.timeText}>
                                   <Clock size={12} /> {timeToArrival} min • Chegada às {arrivalTimeFormatted}
                                 </span>
@@ -1866,10 +1901,10 @@ export default function Mapa() {
                       })
                     ) : (
                       <div className={styles.emptyState}>
-                        <MapPin size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                        <p>Nenhum ponto encontrado em um raio de 2km.</p>
-                        <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>
-                          Tente atualizar sua localização acima ou use a busca para encontrar pontos em outras regiões.
+                        <Bus size={48} style={{ marginBottom: '1rem', opacity: 0.5, color: '#10b981' }} />
+                        <p style={{ fontWeight: 600 }}>Nenhum ponto de ônibus dentro de 2km</p>
+                        <span style={{ fontSize: '0.9rem', color: '#94a3b8', textAlign: 'center', maxWidth: 320 }}>
+                          Não encontramos pontos de ônibus perto de você. Tente atualizar seu CEP ou usar a aba "Partidas" para buscar em outras regiões.
                         </span>
                       </div>
                     )}

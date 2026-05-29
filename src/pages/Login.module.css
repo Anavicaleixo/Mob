@@ -215,3 +215,16 @@
 .fileInput {
   display: none;
 }
+
+@media (max-width: 768px) {
+  .container {
+    padding: 2rem 1rem;
+  }
+  .card {
+    padding: 1.5rem;
+  }
+  .brand h1 {
+    font-size: 1.5rem;
+  }
+}
+

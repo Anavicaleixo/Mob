@@ -151,40 +151,6 @@ export default function Perfil() {
     }
   };
 
-  const handleResetPassword = async () => {
-    const result = await Swal.fire({
-      title: 'Redefinir senha',
-      text: `Deseja enviar um email de redefinição de senha para ${user.email}?`,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#1c4f36',
-      cancelButtonColor: '#dc2626',
-      confirmButtonText: 'Sim, enviar email',
-      cancelButtonText: 'Cancelar'
-    });
-
-    if (result.isConfirmed) {
-      try {
-        await resetPassword(user.email);
-        await Swal.fire({
-          icon: 'success',
-          title: 'Email enviado!',
-          text: 'Verifique sua caixa de entrada para redefinir sua senha.',
-          confirmButtonColor: '#1c4f36',
-          confirmButtonText: 'OK'
-        });
-      } catch (error) {
-        await Swal.fire({
-          icon: 'error',
-          title: 'Erro ao enviar',
-          text: error.message || 'Não foi possível enviar o email de redefinição.',
-          confirmButtonColor: '#1c4f36',
-          confirmButtonText: 'OK'
-        });
-      }
-    }
-  };
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -285,13 +251,12 @@ export default function Perfil() {
                     onChange={e => setEditFormData({...editFormData, senhaAtual: e.target.value})}
                   />
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                    <button 
-                      type="button" 
-                      onClick={handleResetPassword}
+                    <Link 
+                      to="/redefinir-senha"
                       style={{ background: 'none', border: 'none', color: '#10b981', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
                     >
                       Esqueceu a senha?
-                    </button>
+                    </Link>
                   </div>
                 </div>
 

@@ -10,3 +10,10 @@
 .footer p {
   margin: 0;
 }
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 1rem;
+    font-size: 0.75rem;
+  }
+}
