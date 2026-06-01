@@ -40,16 +40,26 @@ export const trafficService = {
    * @param {number} baseSpeedKmh Default average bus speed in urban areas
    * @returns {number} Minutes
    */
+  // Calculates ETA in minutes for vehicle (bus) trips based on distance and traffic.
   calculateETAMinutes: (distanceMeters, baseSpeedKmh = 25) => {
+    // Minimum ETA for very short distances (e.g., bus just arrived)
+    if (distanceMeters < 200) return 1; // 1 minute minimum
     const trafficFactor = trafficService.getTrafficFactor();
     const distanceKm = distanceMeters / 1000;
-    
-    // Time = Distance / Speed
-    // Speed is reduced by the traffic factor
+    // Effective speed reduced by traffic factor
     const effectiveSpeedKmh = baseSpeedKmh / trafficFactor;
     const hours = distanceKm / effectiveSpeedKmh;
-    
-    return Math.max(1, Math.round(hours * 60));
+    // Ensure a realistic lower bound (at least 2 minutes for any non‑trivial distance)
+    return Math.max(2, Math.round(hours * 60));
+  },
+
+  // Calculates ETA in minutes for walking trips.
+  calculateWalkingMinutes: (distanceMeters, walkingSpeedKmh = 5) => {
+    // Minimum ETA for very short distances
+    if (distanceMeters < 200) return 1;
+    const distanceKm = distanceMeters / 1000;
+    const hours = distanceKm / walkingSpeedKmh;
+    return Math.max(2, Math.round(hours * 60));
   },
 
   /**
@@ -83,3 +93,5 @@ export const trafficService = {
     return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 };
+
+

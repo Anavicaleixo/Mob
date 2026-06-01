@@ -144,9 +144,26 @@ export const storage = {
   },
   
   async getStops() {
-    const { data, error } = await supabase.from('stops').select('*');
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase.from('stops').select('*');
+      if (error) throw error;
+      if (data && data.length > 0) return data;
+      throw new Error("Banco de pontos vazio");
+    } catch (err) {
+      console.warn("Usando fallback de pontos (banco vazio ou erro)");
+      return [
+        { id: 1, name: "Terminal Padre Marcelo", lines: ["01", "04", "06", "08", "10"], location: "Centro", coverage: true, bench: true, accessible: true, lat: -23.0992, lng: -45.7085 },
+        { id: 2, name: "Terminal Centro", lines: ["01", "05", "07", "09", "10", "13"], location: "Centro", coverage: true, bench: true, accessible: true, lat: -23.1015, lng: -45.7078 },
+        { id: 3, name: "Rodoviária de Caçapava", lines: ["04", "06", "08", "10", "13"], location: "Centro", coverage: true, bench: false, accessible: true, lat: -23.0988, lng: -45.7062 },
+        { id: 4, name: "Vila Velha I", lines: ["01", "07"], location: "Vila Velha", coverage: false, bench: false, accessible: false, lat: -23.0850, lng: -45.7200 },
+        { id: 5, name: "Vila Velha II (Germana)", lines: ["01", "07"], location: "Vila Velha", coverage: false, bench: true, accessible: false, lat: -23.0835, lng: -45.7220 },
+        { id: 6, name: "Boa Vista", lines: ["04", "05"], location: "Boa Vista", coverage: true, bench: false, accessible: false, lat: -23.1150, lng: -45.6900 },
+        { id: 7, name: "Aldeias da Serra", lines: ["04", "05"], location: "Aldeias da Serra", coverage: false, bench: false, accessible: false, lat: -23.1200, lng: -45.6800 },
+        { id: 8, name: "Guadalupe", lines: ["05", "13"], location: "Guadalupe", coverage: false, bench: false, accessible: false, lat: -23.0900, lng: -45.7300 },
+        { id: 9, name: "Vila Galvão", lines: ["05", "13"], location: "Vila Galvão", coverage: false, bench: true, accessible: false, lat: -23.0880, lng: -45.7350 },
+        { id: 10, name: "Pinus", lines: ["06", "09"], location: "Pinus", coverage: false, bench: false, accessible: false, lat: -23.0855, lng: -45.6980 }
+      ];
+    }
   },
 
 
@@ -369,11 +386,16 @@ export const storage = {
   },
 
   async updatePasswordRequestStatus(id, status) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('password_requests')
       .update({ status })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
+      
     if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error("Não foi possível atualizar (possível bloqueio de permissão RLS no banco).");
+    }
   },
 
   async addRating(rating) {

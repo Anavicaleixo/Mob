@@ -68,7 +68,7 @@ export default function Recompensas() {
       const fetchRedemptions = storage.getRedemptions(user.id).catch(() => []);
       const fetchRatings = storage.getUserRatings(user.id).catch(() => []);
       const fetchTrips = storage.getUserTrips(user.id).catch(() => []);
-      const fetchPasses = storage.getBusPasses().catch(() => []);
+      const fetchPasses = storage.getBusPasses ? storage.getBusPasses().catch(() => []) : Promise.resolve([]);
 
       const [rewardsData, reports, redemptions, ratings, trips, passesData] = await Promise.all([
         fetchRewards,
@@ -177,10 +177,23 @@ export default function Recompensas() {
     }, 'image/png');
   };
 
-  const downloadPassDocument = () => {
+  const downloadPassDocument = (passObj) => {
+    let filename = 'passee.png';
+    const id = String(passObj?.id);
+    const cost = passObj?.cost;
+    const title = passObj?.title || '';
+    
+    if (id === '2' || cost === 450 || title.includes('5 viagem')) filename = 'passe_5.png';
+    else if (id === '3' || cost === 800 || title.includes('10 viagem')) filename = 'passe_10.png';
+    else if (id === '4' || cost === 2500 || title.toLowerCase().includes('mensal') || title.toLowerCase().includes('ilimitado')) filename = 'passe_ilimitado.png';
+
+    console.log('Downloading pass:', passObj, '->', filename);
+
     const a = document.createElement('a');
-    a.href = 'passee.png';
-    a.download = 'passee.png';
+    // Public folder assets are served from the root path in Vite
+    const baseUrl = import.meta.env.BASE_URL || '/';
+    a.href = `${baseUrl === '/' ? '' : baseUrl}/${filename}`;
+    a.download = filename;
     a.click();
   };
 
@@ -203,7 +216,7 @@ export default function Recompensas() {
 
     try {
       await storage.redeemReward(user.id, reward.id, reward.cost, reward.title);
-      generatePassport(reward);
+      downloadPassDocument(reward);
       Swal.fire({
         icon: 'success',
         iconColor: '#10b981',
@@ -454,11 +467,6 @@ export default function Recompensas() {
                     <span className={styles.availableBadge}>Disponível</span>
                   ) : (
                     <span className={styles.missingBadge}>Faltam {pass.cost - currentPoints} pts</span>
-                  )}
-                  {pass.id === 1 && (
-                    <button className={styles.downloadBtn} onClick={e => { e.stopPropagation(); downloadPassDocument(); }} title="Baixar documento">
-                      <Download size={16} color="#10b981" />
-                    </button>
                   )}
                 </div>
               </div>

@@ -871,39 +871,9 @@ function AlertasTab() {
                 {getTypeStyle(r.type).label}
               </span>
               <div className={styles.alertaActions}>
-                <button className={styles.actionBtn} onClick={async () => {
-  const { value: formValues } = await Swal.fire({
-    title: 'Editar Alerta',
-    html: `
-      <input id='swal-input-title' class='swal2-input' placeholder='Título' value='${r.title}'>
-      <textarea id='swal-input-desc' class='swal2-textarea' placeholder='Descrição'>${r.description}</textarea>
-      <select id='swal-input-type' class='swal2-select'>
-        <option value='aviso' ${r.type === 'aviso' ? 'selected' : ''}>Aviso</option>
-        <option value='alteracao' ${r.type === 'alteracao' ? 'selected' : ''}>Alteração</option>
-        <option value='nova_linha' ${r.type === 'nova_linha' ? 'selected' : ''}>Nova Linha</option>
-        <option value='info' ${r.type === 'info' ? 'selected' : ''}>Info</option>
-      </select>
-      <input id='swal-input-line' class='swal2-input' placeholder='ID da Linha' value='${r.line_id || ''}'>
-    `,
-    focusConfirm: false,
-    showCancelButton: true,
-    preConfirm: () => {
-      const title = document.getElementById('swal-input-title').value.trim();
-      const description = document.getElementById('swal-input-desc').value.trim();
-      const type = document.getElementById('swal-input-type').value;
-      const line_id = document.getElementById('swal-input-line').value.trim();
-      if (!title || !description) {
-        Swal.showValidationMessage('Preencha título e descrição');
-      }
-      return { title, description, type, line_id };
-    }
-  });
-  if (formValues) {
-    // after successful update, show confirmation
-await Swal.fire({ title: 'Sucesso', text: 'Alerta atualizado!', icon: 'success', confirmButtonColor: '#093021' });
-load();
-  }
-}}><Edit2 size={16} color="#10b981" /></button>
+                <button className={styles.actionBtn} onClick={() => handleEdit(r)}>
+                  <Edit2 size={16} color="#10b981" />
+                </button>
                 <button className={styles.actionBtn} onClick={async () => {
                    const res = await Swal.fire({
                      title: 'Excluir Alerta?',
@@ -1138,7 +1108,26 @@ function SolicitacoesSenhaTab() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { 
+    load(); 
+    
+    // Configura o real-time para escutar mudanças na tabela
+    const channel = supabase
+      .channel('password_requests_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'password_requests' }, 
+        (payload) => {
+          // Quando houver qualquer mudança (INSERT, UPDATE, DELETE), recarrega os dados
+          load();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const load = async () => {
     setLoading(true);
     try { setRequests(await storage.getPasswordRequests()); } catch(e) {} finally { setLoading(false); }
@@ -1166,20 +1155,20 @@ function SolicitacoesSenhaTab() {
                   <th>Motivo Informado</th>
                   <th>Solicitado em</th>
                   <th>Status</th>
-                </tr>
+                 </tr>
               </thead>
               <tbody>
                 {requests.map(req => (
                   <tr key={req.id}>
-                    <td>{req.email}</td>
-                    <td>{req.reason}</td>
-                    <td>{new Date(req.created_at).toLocaleString('pt-BR')}</td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${req.status === 'pendente' ? styles.statusPendente : styles.statusResolvido}`}>
-                        {req.status}
+                     <td>{req.email}</td>
+                     <td>{req.reason}</td>
+                     <td>{new Date(req.created_at).toLocaleString('pt-BR')}</td>
+                     <td>
+                      <span className={`${styles.statusBadge} ${req.status?.toLowerCase() !== 'resolvido' ? styles.statusPendente : styles.statusResolvido}`}>
+                        {req.status || 'pendente'}
                       </span>
                     </td>
-                  </tr>
+                   </tr>
                 ))}
               </tbody>
             </table>
@@ -1204,8 +1193,8 @@ function SolicitacoesSenhaTab() {
                 <div className={styles.mobileCardRow}>
                   <span className={styles.mobileCardLabel}>Status:</span>
                   <span className={styles.mobileCardValue}>
-                    <span className={`${styles.statusBadge} ${req.status === 'pendente' ? styles.statusPendente : styles.statusResolvido}`}>
-                      {req.status}
+                    <span className={`${styles.statusBadge} ${req.status?.toLowerCase() !== 'resolvido' ? styles.statusPendente : styles.statusResolvido}`}>
+                      {req.status || 'pendente'}
                     </span>
                   </span>
                 </div>

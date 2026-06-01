@@ -56,6 +56,24 @@ export default function RedefinirSenha() {
         throw new Error("Sessão de recuperação não encontrada. Tente clicar no link do e-mail novamente.");
       }
 
+      const userEmail = session?.user?.email;
+      if (userEmail) {
+        try {
+          const { data: updatedData, error: updateErr } = await supabase
+            .from('password_requests')
+            .update({ status: 'resolvido' })
+            .ilike('email', userEmail.trim())
+            .select();
+            
+          if (updateErr) console.error("Update error:", updateErr);
+          if (!updatedData || updatedData.length === 0) {
+            console.error("Nenhuma linha foi atualizada. Isso confirma bloqueio de RLS no Supabase.");
+          }
+        } catch(err) {
+          console.error("Erro ao atualizar status do request:", err);
+        }
+      }
+
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
       

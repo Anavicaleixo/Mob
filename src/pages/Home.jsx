@@ -71,23 +71,36 @@ export default function Home() {
           negatives: reportsData.filter(r => r.type === 'negative').length
         });
 
-        // Calcular pontos próximos se houver localização salva
-        const savedLocation = JSON.parse(localStorage.getItem('mobtracker_user_location'));
-        if (savedLocation && allStopsData) {
+        const calculateNearby = (locationObj) => {
+          if (!locationObj || !allStopsData) return;
           const sortedStops = allStopsData
             .map(stop => {
-              const stopLat = Number(stop.lat);
-              const stopLng = Number(stop.lng);
-              const dist = getDistance(savedLocation.lat, savedLocation.lng, stopLat, stopLng);
+              const stopLat = Number(stop.lat || stop.latitude);
+              const stopLng = Number(stop.lng || stop.longitude);
+              const dist = getDistance(locationObj.lat, locationObj.lng, stopLat, stopLng);
               return {
                 ...stop,
                 distance: dist
               };
             })
-            .filter(stop => stop.distance <= 2000) // Limita a 2km
+            .filter(stop => stop.distance <= 5000 && stop.distance > 0) // Limita a 5km e remove zeros anômalos
             .sort((a, b) => a.distance - b.distance)
             .slice(0, 3);
           setNearbyStops(sortedStops);
+        };
+
+        const savedLocation = JSON.parse(localStorage.getItem('mobtracker_user_location'));
+        if (savedLocation) {
+          calculateNearby(savedLocation);
+        } else if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            localStorage.setItem('mobtracker_user_location', JSON.stringify(loc));
+            calculateNearby(loc);
+          }, () => {
+            // Fallback to center
+            calculateNearby({ lat: -23.100, lng: -45.700 });
+          });
         }
       } catch (error) {
         console.error("Erro ao buscar dados", error);

@@ -491,8 +491,8 @@
 }
 
 .badgeCobertura {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background-color: #f0fdf4;
+  color: #16a34a;
 }
 
 .badgeBanco {
@@ -501,8 +501,8 @@
 }
 
 .badgeAcessivel {
-  background-color: #fdf2f8;
-  color: #db2777;
+  background-color: #f0fdf4;
+  color: #16a34a;
 }
 
 .chevron {
@@ -772,9 +772,9 @@
 }
 
 .cardCobertura {
-  background: #eff6ff;
-  color: #2563eb;
-  border-color: #dbeafe;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #dcfce7;
 }
 
 .cardBanco {
@@ -784,9 +784,9 @@
 }
 
 .cardAcessivel {
-  background: #fdf2f8;
-  color: #db2777;
-  border-color: #fce7f3;
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #dcfce7;
 }
 
 .googleMapsBtn {

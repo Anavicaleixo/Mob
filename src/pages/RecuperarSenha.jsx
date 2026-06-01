@@ -18,9 +18,17 @@ export default function RecuperarSenha() {
     setLoading(true);
 
     try {
+      // 1. PRIMEIRO: Registrar a solicitação na tabela password_requests
+      console.log('📝 Registrando solicitação para:', email);
+      await storage.createPasswordRequest(email, 'Usuário solicitou redefinição de senha via formulário');
+      console.log('✅ Solicitação registrada com sucesso!');
+      
+      // 2. SEGUNDO: Enviar o email de redefinição
       await storage.resetPassword(email);
+      
       setMessage("Um e-mail com o link de redefinição foi enviado para " + email + ". Verifique sua caixa de entrada e a pasta de spam.");
     } catch (err) {
+      console.error('❌ Erro:', err);
       setError(err.message || "Erro ao enviar e-mail de recuperação");
     } finally {
       setLoading(false);
@@ -75,4 +83,3 @@ export default function RecuperarSenha() {
     </div>
   );
 }
-
