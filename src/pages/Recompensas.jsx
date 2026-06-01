@@ -25,8 +25,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { storage } from '../services/storage';
 import Swal from 'sweetalert2';
 import styles from './Recompensas.module.css';
-
-// Mapeamento de ícones para transformar texto do banco em componente
 const iconMap = {
   'Bus': <Bus size={28} color="#10b981" />,
   'Coffee': <Coffee size={28} color="#10b981" />,
@@ -35,7 +33,6 @@ const iconMap = {
   'Gift': <Gift size={28} color="white" />,
   'Award': <Award size={28} color="#10b981" />
 };
-
 export default function Recompensas() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,26 +47,20 @@ export default function Recompensas() {
     contributions: 0,
     tripsCount: 0
   });
-
   const [busPasses, setBusPasses] = useState([]);
-
   async function loadData() {
     if (!user) return;
     setLoading(true);
     try {
-      // Busca o perfil para ter os pontos reais do banco
       const prof = await storage.getProfile(user.id);
       const points = prof?.points || 0;
       setCurrentPoints(points);
-
-      // Busca dados em paralelo, mas lidando com erros individuais para que uma tabela faltando não quebre tudo
       const fetchRewards = storage.getRewards().catch(() => []);
       const fetchReports = storage.getUserReports(user.id).catch(() => []);
       const fetchRedemptions = storage.getRedemptions(user.id).catch(() => []);
       const fetchRatings = storage.getUserRatings(user.id).catch(() => []);
       const fetchTrips = storage.getUserTrips(user.id).catch(() => []);
       const fetchPasses = storage.getBusPasses ? storage.getBusPasses().catch(() => []) : Promise.resolve([]);
-
       const [rewardsData, reports, redemptions, ratings, trips, passesData] = await Promise.all([
         fetchRewards,
         fetchReports,
@@ -78,9 +69,7 @@ export default function Recompensas() {
         fetchTrips,
         fetchPasses
       ]);
-      
       setRewards(rewardsData || []);
-      
       const LOCAL_PASSES = [
         { id: 1, title: 'Passe de 1 viagem', desc: '1 passagem de ônibus municipal', cost: 100 },
         { id: 2, title: 'Passe de 5 viagens', desc: '5 passagens com 10% de desconto', cost: 450 },
@@ -88,13 +77,10 @@ export default function Recompensas() {
         { id: 4, title: 'Passe mensal', desc: 'Passe mensal ilimitado', cost: 2500 },
       ];
       setBusPasses(passesData && passesData.length > 0 ? passesData : LOCAL_PASSES);
-      
-      // Calcula estatísticas reais
       const safeReports = reports || [];
       const safeRedemptions = redemptions || [];
       const safeRatings = ratings || [];
       const safeTrips = trips || [];
-
       const totalRedeemedPoints = safeRedemptions.reduce((sum, r) => sum + (r.cost || 0), 0);
       setUserStats({
         redeemedCount: safeRedemptions.length,
@@ -103,8 +89,6 @@ export default function Recompensas() {
         contributions: safeReports.length + safeRatings.length,
         tripsCount: safeTrips.length
       });
-
-      // Converte relatos em histórico
       const historyData = safeReports.map(r => ({
         id: `rep-${r.id}`,
         title: `Relato enviado (${r.type})`,
@@ -113,8 +97,6 @@ export default function Recompensas() {
         points: 10,
         type: 'earn'
       }));
-
-      // Adiciona resgates ao histórico
       const redemptionHistory = safeRedemptions.map(r => ({
         id: `red-${r.id}`,
         title: `Resgate: ${r.title}`,
@@ -123,8 +105,6 @@ export default function Recompensas() {
         points: -r.cost,
         type: 'redeem'
       }));
-
-      // Adiciona viagens ao histórico
       const tripsHistory = safeTrips.map(t => ({
         id: `trip-${t.id}`,
         title: `Viagem registrada (${t.line_id || 'Linha'})`,
@@ -133,40 +113,30 @@ export default function Recompensas() {
         points: 20,
         type: 'earn'
       }));
-
       setHistory([...historyData, ...redemptionHistory, ...tripsHistory].sort((a, b) => b.timestamp - a.timestamp));
-
     } catch (err) {
       console.error("Erro ao carregar recompensas:", err);
     } finally {
       setLoading(false);
     }
   }
-
   useEffect(() => {
     loadData();
   }, [user]);
-
   const generatePassport = (pass) => {
-    // Create a canvas to render the passport as an image
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    // Define canvas size (adjust as needed)
     canvas.width = 600;
     canvas.height = 400;
-    // Background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Text styling
     ctx.fillStyle = '#000000';
     ctx.font = '20px Arial';
     ctx.textBaseline = 'top';
-    // Write passport information
     ctx.fillText('Passaporte', 20, 30);
     ctx.fillText(`Título: ${pass.title}`, 20, 70);
     ctx.fillText(`Descrição: ${pass.description || pass.desc}`, 20, 110);
     ctx.fillText(`Código: ${pass.id}-${new Date().toISOString()}`, 20, 150);
-    // Convert canvas to PNG blob and trigger download
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -176,30 +146,23 @@ export default function Recompensas() {
       URL.revokeObjectURL(url);
     }, 'image/png');
   };
-
   const downloadPassDocument = (passObj) => {
     let filename = 'passee.png';
     const id = String(passObj?.id);
     const cost = passObj?.cost;
     const title = passObj?.title || '';
-    
     if (id === '2' || cost === 450 || title.includes('5 viagem')) filename = 'passe_5.png';
     else if (id === '3' || cost === 800 || title.includes('10 viagem')) filename = 'passe_10.png';
     else if (id === '4' || cost === 2500 || title.toLowerCase().includes('mensal') || title.toLowerCase().includes('ilimitado')) filename = 'passe_ilimitado.png';
-
     console.log('Downloading pass:', passObj, '->', filename);
-
     const a = document.createElement('a');
-    // Public folder assets are served from the root path in Vite
     const baseUrl = import.meta.env.BASE_URL || '/';
     a.href = `${baseUrl === '/' ? '' : baseUrl}/${filename}`;
     a.download = filename;
     a.click();
   };
-
   const handleRedeem = async (reward) => {
     if (currentPoints < reward.cost) return;
-
     const result = await Swal.fire({
       title: 'Confirmar Resgate',
       text: `Deseja resgatar "${reward.title}" por ${reward.cost} pontos?`,
@@ -211,9 +174,7 @@ export default function Recompensas() {
       confirmButtonText: 'Sim, resgatar!',
       cancelButtonText: 'Cancelar'
     });
-
     if (!result.isConfirmed) return;
-
     try {
       await storage.redeemReward(user.id, reward.id, reward.cost, reward.title);
       downloadPassDocument(reward);
@@ -224,7 +185,7 @@ export default function Recompensas() {
         text: 'Seu benefício foi resgatado com sucesso.',
         confirmButtonColor: '#10b981'
       });
-      loadData(); // Recarrega dados
+      loadData(); 
     } catch (err) {
       Swal.fire({
         icon: 'error',
@@ -235,7 +196,6 @@ export default function Recompensas() {
       });
     }
   };
-
   const handleQuickTrip = async () => {
     if (!user) {
       return Swal.fire({
@@ -246,7 +206,6 @@ export default function Recompensas() {
         confirmButtonColor: '#10b981'
       });
     }
-
     const { value: line } = await Swal.fire({
       title: 'Registrar Viagem',
       input: 'select',
@@ -270,9 +229,7 @@ export default function Recompensas() {
       confirmButtonText: 'Registrar',
       cancelButtonText: 'Cancelar'
     });
-
     if (!line) return;
-
     try {
       await storage.addTrip(user.id, line);
       Swal.fire({
@@ -293,7 +250,6 @@ export default function Recompensas() {
       });
     }
   };
-
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -303,12 +259,10 @@ export default function Recompensas() {
             <Gift size={16} color="white" />
             <span>Programa de Recompensas</span>
           </div>
-          
           <h1 className={styles.title}>MobPontos</h1>
           <p className={styles.subtitle}>
             Contribua com relatos e avaliações, acumule pontos e troque por passagens de ônibus
           </p>
-
           <div className={styles.pointsCard}>
             <span className={styles.cardLabel}>Seu saldo</span>
             <div className={styles.pointsDisplay}>
@@ -317,13 +271,11 @@ export default function Recompensas() {
             </div>
             <span className={styles.pointsSublabel}>pontos disponíveis</span>
           </div>
-
           <div className={styles.headerInfoSection}>
             <h2 className={styles.headerInfoTitle}>Por que usar o ônibus?</h2>
             <p className={styles.headerInfoText}>
               O transporte coletivo é uma escolha inteligente para você e para a cidade. Veja por que cada viagem de ônibus faz diferença:
             </p>
-
             <div className={styles.headerBenefitsGrid}>
               <div className={styles.headerBenefitCard}>
                 <div className={`${styles.benefitIcon} ${styles.iconDollar}`}>
@@ -334,7 +286,6 @@ export default function Recompensas() {
                   <p>Custa até 10x menos que carro próprio.</p>
                 </div>
               </div>
-
               <div className={styles.headerBenefitCard}>
                 <div className={`${styles.benefitIcon} ${styles.iconLeaf}`}>
                   <Leaf size={20} color="#10b981" />
@@ -344,7 +295,6 @@ export default function Recompensas() {
                   <p>Reduz em 70% a emissão de CO₂.</p>
                 </div>
               </div>
-
               <div className={styles.headerBenefitCard}>
                 <div className={`${styles.benefitIcon} ${styles.iconBus}`}>
                   <Bus size={20} color="#10b981" />
@@ -354,7 +304,6 @@ export default function Recompensas() {
                   <p>Acesso para toda a população.</p>
                 </div>
               </div>
-
               <div className={styles.headerBenefitCard}>
                 <div className={`${styles.benefitIcon} ${styles.iconUsers}`}>
                   <Users size={20} color="#10b981" />
@@ -368,7 +317,6 @@ export default function Recompensas() {
           </div>
         </div>
       </header>
-
       <main className={styles.mainContent}>
         <section className={styles.statsSection}>
           <h2 className={styles.sectionTitle}>Suas viagens de ônibus</h2>
@@ -398,7 +346,6 @@ export default function Recompensas() {
             </div>
           </div>
         </section>
-
         <section className={styles.earnSection}>
           <h2 className={styles.sectionTitle}>Como acumular pontos</h2>
           <div className={styles.earningGrid}>
@@ -410,7 +357,6 @@ export default function Recompensas() {
               </div>
               <div className={styles.earnPoints}>+20 <Star size={14} fill="#10b981" color="#10b981" /></div>
             </div>
-
             <div className={styles.earnCard} onClick={() => navigate('/pontos')} style={{ cursor: 'pointer' }}>
               <div className={styles.earnIcon}><MessageSquare size={20} color="#10b981" /></div>
               <div className={styles.earnText}>
@@ -419,7 +365,6 @@ export default function Recompensas() {
               </div>
               <div className={styles.earnPoints}>+10 <Star size={14} fill="#10b981" color="#10b981" /></div>
             </div>
-
             <div className={styles.earnCard} onClick={() => navigate('/linhas')} style={{ cursor: 'pointer' }}>
               <div className={styles.earnIcon}><Star size={20} color="#10b981" /></div>
               <div className={styles.earnText}>
@@ -428,7 +373,6 @@ export default function Recompensas() {
               </div>
               <div className={styles.earnPoints}>+5 <Star size={14} fill="#10b981" color="#10b981" /></div>
             </div>
-
             <div className={styles.earnCard} onClick={() => navigate('/linhas')} style={{ cursor: 'pointer' }}>
               <div className={styles.earnIcon}><ThumbsUp size={20} color="#10b981" /></div>
               <div className={styles.earnText}>
@@ -437,10 +381,8 @@ export default function Recompensas() {
               </div>
               <div className={styles.earnPoints}>+2 <Star size={14} fill="#10b981" color="#10b981" /></div>
             </div>
-
           </div>
         </section>
-
         <section className={styles.redeemSection}>
           <h2 className={styles.sectionTitle}>Resgatar passagens</h2>
           <div className={styles.redeemGrid}>
@@ -473,8 +415,6 @@ export default function Recompensas() {
             ))}
           </div>
         </section>
-
-
         <section className={styles.historySection}>
           <h2 className={styles.sectionTitle}>Histórico de transações</h2>
           <div className={styles.historyList}>

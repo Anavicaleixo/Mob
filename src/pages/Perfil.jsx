@@ -19,7 +19,6 @@ import {
 import styles from './Perfil.module.css';
 import { storage } from '../services/storage';
 import Swal from 'sweetalert2';
-
 export default function Perfil() {
   const { user, logout, updatePassword, login, resetPassword } = useAuth();
   const [favorites, setFavorites] = useState([]);
@@ -27,15 +26,12 @@ export default function Perfil() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stops, setStops] = useState([]);
-
   useEffect(() => {
     if (user) {
       async function loadUserData() {
         setLoading(true);
         console.log("Iniciando carregamento de dados do usuário:", user.id);
-        
         try {
-          // Carregar perfil
           try {
             const prof = await storage.getProfile(user.id);
             setProfile(prof);
@@ -43,8 +39,6 @@ export default function Perfil() {
           } catch (e) {
             console.error("Erro ao carregar perfil:", e);
           }
-
-          // Carregar relatos
           try {
             const reports = await storage.getUserReports(user.id);
             setUserReports(reports);
@@ -52,8 +46,6 @@ export default function Perfil() {
           } catch (e) {
             console.error("Erro ao carregar relatos:", e);
           }
-
-          // Carregar favoritos e stops
           try {
             const [favIds, allStops] = await Promise.all([
               storage.getFavorites(user.id),
@@ -66,7 +58,6 @@ export default function Perfil() {
           } catch (e) {
             console.error("Erro ao carregar favoritos:", e);
           }
-
         } catch (err) {
           console.error("Erro geral no Perfil:", err);
         } finally {
@@ -76,14 +67,11 @@ export default function Perfil() {
       loadUserData();
     }
   }, [user]);
-
   if (!user) {
     return <Navigate to="/login" />;
   }
-
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFormData, setEditFormData] = useState({ nome: '', email: '', foto: null, senhaAtual: '' });
-
   useEffect(() => {
     if (profile) {
       setEditFormData({
@@ -94,14 +82,12 @@ export default function Perfil() {
       });
     }
   }, [profile, user]);
-
   const handleEditSave = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (editFormData.senhaAtual) {
         try {
-          // Reautentica para validar a senha
           await login(user.email, editFormData.senhaAtual);
         } catch (e) {
           await Swal.fire({
@@ -115,19 +101,16 @@ export default function Perfil() {
           return;
         }
       }
-
       await storage.updateProfile(user.id, {
         nome: editFormData.nome,
         email: editFormData.email,
         points: profile?.points || 0,
         foto: editFormData.foto
       });
-      
       const updatedProf = await storage.getProfile(user.id);
       setProfile(updatedProf);
       setShowEditModal(false);
       setEditFormData(prev => ({ ...prev, senhaAtual: '' }));
-      
       await Swal.fire({
         icon: 'success',
         title: 'Perfil atualizado!',
@@ -150,7 +133,6 @@ export default function Perfil() {
       setLoading(false);
     }
   };
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -169,10 +151,8 @@ export default function Perfil() {
       reader.readAsDataURL(file);
     }
   };
-
   const userInitial = profile?.nome ? profile.nome.charAt(0).toUpperCase() : (user.email ? user.email.charAt(0).toUpperCase() : 'U');
   const userName = profile?.nome || (user.email ? user.email.split('@')[0] : 'Usuário');
-
   return (
     <div className={styles.pageContainer}>
       <header className={styles.profileHeader}>
@@ -203,8 +183,7 @@ export default function Perfil() {
              Sair <LogOut size={16} color="#10b981" />
           </button>
         </div>
-
-        {/* Modal de Edição */}
+        {}
         {showEditModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }}>
             <div style={{ background: 'white', padding: '2.5rem', borderRadius: '24px', width: '90%', maxWidth: '450px', position: 'relative' }}>
@@ -221,7 +200,6 @@ export default function Perfil() {
                     </div>
                   </label>
                 </div>
-                
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#475569' }}>Nome Completo</label>
                   <input 
@@ -230,7 +208,6 @@ export default function Perfil() {
                     onChange={e => setEditFormData({...editFormData, nome: e.target.value})}
                   />
                 </div>
-
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#475569' }}>E-mail</label>
                   <input 
@@ -240,7 +217,6 @@ export default function Perfil() {
                   />
                   <small style={{ color: '#94a3b8', fontSize: '0.7rem' }}>O e-mail é vinculado à sua conta de login.</small>
                 </div>
-
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#475569' }}>Senha Atual</label>
                   <input 
@@ -259,7 +235,6 @@ export default function Perfil() {
                     </Link>
                   </div>
                 </div>
-
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                   <button type="button" onClick={() => setShowEditModal(false)} style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>Cancelar</button>
                   <button type="submit" style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: 'none', background: '#1c4f36', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>Salvar Alterações</button>
@@ -268,7 +243,6 @@ export default function Perfil() {
             </div>
           </div>
         )}
-
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
             <span className={styles.statValue}>{profile?.points || 0}</span>
@@ -290,7 +264,6 @@ export default function Perfil() {
           </div>
         </div>
       </header>
-
       <main className={styles.contentBody}>
         <section className={styles.favoritesSection}>
           <div className={styles.favoritesHeader}>
@@ -302,7 +275,6 @@ export default function Perfil() {
               Ver mapa <ChevronRight size={16} color="#10b981" />
             </Link>
           </div>
-
           <div className={styles.favoritesList}>
             {favorites.length > 0 ? (
               favorites.map(stop => (
@@ -326,14 +298,12 @@ export default function Perfil() {
             )}
           </div>
         </section>
-
         <section className={styles.sectionHeader}>
           <div className={styles.sectionTitle}>
             <MessageSquare size={20} color="#10b981" />
             <span>Meus últimos relatos</span>
           </div>
         </section>
-
         <div className={styles.userReportsList}>
           {userReports.length > 0 ? (
             userReports.map(report => (
@@ -366,13 +336,11 @@ export default function Perfil() {
             </div>
           )}
         </div>
-
         <section className={styles.sectionHeader}>
           <div className={styles.sectionTitle}>
             <span>Acesso rápido</span>
           </div>
         </section>
-
         <div className={styles.quickAccessGrid}>
           <Link to="/recompensas" className={styles.quickAccessCard}>
             <div className={styles.cardMainInfo}>
@@ -383,7 +351,6 @@ export default function Perfil() {
             </div>
             <ChevronRight className={styles.chevron} size={18} color="#10b981" />
           </Link>
-
           <Link to="/linhas" className={styles.quickAccessCard}>
             <div className={styles.cardMainInfo}>
               <div className={`${styles.iconWrapper} ${styles.iconLines}`}>
@@ -393,7 +360,6 @@ export default function Perfil() {
             </div>
             <ChevronRight className={styles.chevron} size={18} color="#10b981" />
           </Link>
-
           <Link to="/pontos" className={styles.quickAccessCard}>
             <div className={styles.cardMainInfo}>
               <div className={`${styles.iconWrapper} ${styles.iconMap}`}>
@@ -403,7 +369,6 @@ export default function Perfil() {
             </div>
             <ChevronRight className={styles.chevron} size={18} color="#10b981" />
           </Link>
-
           <Link to="/alertas" className={styles.quickAccessCard}>
             <div className={styles.cardMainInfo}>
               <div className={`${styles.iconWrapper} ${styles.iconAlerts}`}>

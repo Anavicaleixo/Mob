@@ -1,98 +1,1 @@
-import React, { useState } from 'react';
-import { Mail, Lock, Bus } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import styles from './Login.module.css';
-import logoImg from '../assets/logo.png';
-
-
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      console.log("[Login] Tentando entrar com:", email);
-      const user = await login(email, password);
-      console.log("[Login] Sucesso! Redirecionando...");
-      navigate('/');
-    } catch (err) {
-      console.error("[Login] Erro capturado:", err);
-      // Se for um erro do Supabase ele tem .message, senão tentamos converter o erro em string
-      const errorMsg = err.message || err.error_description || String(err) || "Erro de conexão desconhecido.";
-      setError(errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className={styles.container}>
-      <div className={styles.brand}>
-        <img src={logoImg} alt="MobTracker Logo" style={{ height: '180px', marginBottom: '0.25rem' }} />
-        <p>Acesse o MobTracker</p>
-        <span>Faça login para registrar relatos e melhorar o transporte público coletivo.</span>
-      </div>
-
-      <div className={styles.card}>
-        <form onSubmit={handleLogin}>
-          {error && <div style={{color: 'red', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}
-          
-          <div className={styles.formGroup}>
-            <label>E-mail</label>
-            <div className={styles.inputWrapper}>
-              <Mail className={styles.inputIcon} size={18} />
-              <input 
-                type="email" 
-                placeholder="Seu e-mail" 
-                className={styles.input}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label>Senha</label>
-            <div className={styles.inputWrapper}>
-              <Lock className={styles.inputIcon} size={18} />
-              <input 
-                type="password" 
-                placeholder="Sua senha" 
-                className={styles.input}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <Link to="/recuperar-senha" className={styles.forgotPassword}>Esqueceu sua senha?</Link>
-
-          <button type="submit" className={styles.btnPrimary} disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-
-        <div className={styles.divider}>ou</div>
-
-        <Link to="/cadastro" className={styles.btnOutline} style={{display: 'block', textAlign: 'center', textDecoration: 'none'}}>
-          Cadastrar-se
-        </Link>
-
-        <p className={styles.terms}>
-          Ao continuar, você concorda com nossos <a href="#">Termos de Uso</a> e com a <a href="#">Política de Privacidade</a>.
-        </p>
-      </div>
-    </div>
-  );
-}
+import React, { useState } from 'react';import { Mail, Lock, Bus } from 'lucide-react';import { useNavigate, Link } from 'react-router-dom';import { useAuth } from '../contexts/AuthContext';import styles from './Login.module.css';import logoImg from '../assets/logo.png';export default function Login() {  const [email, setEmail] = useState('');  const [password, setPassword] = useState('');  const [error, setError] = useState('');  const [loading, setLoading] = useState(false);  const navigate = useNavigate();  const { login } = useAuth();  const handleLogin = async (e) => {    e.preventDefault();    setError('');    setLoading(true);    try {      console.log("[Login] Tentando entrar com:", email);      const user = await login(email, password);      console.log("[Login] Sucesso! Redirecionando...");      navigate('/');    } catch (err) {      console.error("[Login] Erro capturado:", err);      const errorMsg = err.message || err.error_description || String(err) || "Erro de conexão desconhecido.";      setError(errorMsg);    } finally {      setLoading(false);    }  };  return (    <div className={styles.container}>      <div className={styles.brand}>        <img src={logoImg} alt="MobTracker Logo" style={{ height: '180px', marginBottom: '0.25rem' }} />        <p>Acesse o MobTracker</p>        <span>Faça login para registrar relatos e melhorar o transporte público coletivo.</span>      </div>      <div className={styles.card}>        <form onSubmit={handleLogin}>          {error && <div style={{color: 'red', marginBottom: '1rem', fontSize: '0.875rem'}}>{error}</div>}          <div className={styles.formGroup}>            <label>E-mail</label>            <div className={styles.inputWrapper}>              <Mail className={styles.inputIcon} size={18} />              <input                 type="email"                 placeholder="Seu e-mail"                 className={styles.input}                value={email}                onChange={e => setEmail(e.target.value)}                required              />            </div>          </div>          <div className={styles.formGroup}>            <label>Senha</label>            <div className={styles.inputWrapper}>              <Lock className={styles.inputIcon} size={18} />              <input                 type="password"                 placeholder="Sua senha"                 className={styles.input}                value={password}                onChange={e => setPassword(e.target.value)}                required              />            </div>          </div>          <Link to="/recuperar-senha" className={styles.forgotPassword}>Esqueceu sua senha?</Link>          <button type="submit" className={styles.btnPrimary} disabled={loading}>            {loading ? 'Entrando...' : 'Entrar'}          </button>        </form>        <div className={styles.divider}>ou</div>        <Link to="/cadastro" className={styles.btnOutline} style={{display: 'block', textAlign: 'center', textDecoration: 'none'}}>          Cadastrar-se        </Link>        <p className={styles.terms}>          Ao continuar, você concorda com nossos <a href="#">Termos de Uso</a> e com a <a href="#">Política de Privacidade</a>.        </p>      </div>    </div>  );}

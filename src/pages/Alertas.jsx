@@ -20,12 +20,10 @@ import {
 import { storage } from '../services/storage';
 import styles from './Alertas.module.css';
 import Swal from 'sweetalert2';
-
 export default function Alertas() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
-  // Removed modal state; details now shown via SweetAlert
   const [isAdmin, setIsAdmin] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingAlert, setEditingAlert] = useState(null);
@@ -35,13 +33,11 @@ export default function Alertas() {
     type: 'info',
     location: ''
   });
-
   useEffect(() => {
     async function loadAlerts() {
       try {
         const data = await storage.getAlerts();
         setAlerts(data);
-        
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         setIsAdmin(currentUser?.isAdmin || false);
       } catch (err) {
@@ -52,7 +48,6 @@ export default function Alertas() {
     }
     loadAlerts();
   }, []);
-
   const getIcon = (type) => {
     switch (type) {
       case 'aviso': return <AlertTriangle size={20} />;
@@ -62,7 +57,6 @@ export default function Alertas() {
       default: return <Bell size={20} />;
     }
   };
-
   const getCategoryLabel = (type) => {
     switch (type) {
       case 'aviso': return 'Aviso';
@@ -72,20 +66,17 @@ export default function Alertas() {
       default: return 'Geral';
     }
   };
-
   const getTimeAgo = (dateStr) => {
     const now = new Date();
     const alertDate = new Date(dateStr);
     const diffMs = now - alertDate;
     const diffMins = Math.floor(diffMs / 60000);
-    
     if (diffMins < 1) return 'agora mesmo';
     if (diffMins < 60) return `há ${diffMins} min`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `há ${diffHours} h`;
     return alertDate.toLocaleDateString('pt-BR');
   };
-
   const getGuidance = (type) => {
     switch (type) {
       case 'aviso':
@@ -120,7 +111,6 @@ export default function Alertas() {
         ];
     }
   };
-
   const handleCreateAlert = async () => {
     if (!formData.title || !formData.description) {
       await Swal.fire({
@@ -131,14 +121,12 @@ export default function Alertas() {
       });
       return;
     }
-
     try {
       await storage.createAlert(formData);
       const updatedAlerts = await storage.getAlerts();
       setAlerts(updatedAlerts);
       setShowCreateModal(false);
       setFormData({ title: '', description: '', type: 'info', location: '' });
-      
       await Swal.fire({
         icon: 'success',
         title: 'Alerta criado!',
@@ -155,7 +143,6 @@ export default function Alertas() {
       });
     }
   };
-
   const handleEditAlert = async () => {
     if (!formData.title || !formData.description) {
       await Swal.fire({
@@ -166,18 +153,15 @@ export default function Alertas() {
       });
       return;
     }
-
     try {
       await storage.updateAlert(editingAlert.id, formData);
       const updatedAlerts = await storage.getAlerts();
       setAlerts(updatedAlerts);
       setEditingAlert(null);
       setFormData({ title: '', description: '', type: 'info', location: '' });
-      
       if (selectedAlert?.id === editingAlert.id) {
         setSelectedAlert(null);
       }
-      
       await Swal.fire({
         icon: 'success',
         title: 'Alerta atualizado!',
@@ -194,7 +178,6 @@ export default function Alertas() {
       });
     }
   };
-
   const handleViewDetails = async (alert) => {
     const guidance = getGuidance(alert.type).join('<br/>');
     await Swal.fire({
@@ -212,7 +195,6 @@ export default function Alertas() {
       showCloseButton: true
     });
   };
-
   const handleDeleteAlert = async (alert) => {
     const result = await Swal.fire({
       title: 'Excluir Alerta',
@@ -233,12 +215,10 @@ export default function Alertas() {
       confirmButtonText: 'Sim, excluir',
       cancelButtonText: 'Cancelar'
     });
-
     if (result.isConfirmed) {
       try {
         await storage.deleteAlert(alert.id);
         setAlerts(prevAlerts => prevAlerts.filter(a => a.id !== alert.id));
-        
         await Swal.fire({
           icon: 'success',
           title: 'Excluído!',
@@ -256,7 +236,6 @@ export default function Alertas() {
       }
     }
   };
-
   const openEditModal = (alert) => {
     setEditingAlert(alert);
     setFormData({
@@ -266,11 +245,9 @@ export default function Alertas() {
       location: alert.location || ''
     });
   };
-
   const filteredAlerts = filter === 'todos' 
     ? alerts 
     : alerts.filter(a => a.type === filter);
-
   return (
     <div className={styles.pageContainer}>
       <header className={styles.header}>
@@ -281,7 +258,6 @@ export default function Alertas() {
               <Activity size={14} /> Monitoramento em tempo real
             </span>
           </div>
-          
           <div className={styles.mainTitleGroup}>
             <h1 className={styles.title}>Alertas</h1>
             <div className={styles.liveBadge}>
@@ -289,11 +265,9 @@ export default function Alertas() {
               AO VIVO
             </div>
           </div>
-          
           <p className={styles.subtitle}>Informações e avisos em tempo real dos pontos e linhas</p>
         </div>
       </header>
-
       <div className={styles.filterSection}>
         <div className={styles.filterBar}>
           {['todos', 'aviso', 'alteracao', 'nova_linha', 'info'].map(f => (
@@ -315,7 +289,6 @@ export default function Alertas() {
           )}
         </div>
       </div>
-
       <main className={styles.mainContent}>
         {loading ? (
           <div className={styles.loadingState}>Carregando alertas...</div>
@@ -350,12 +323,10 @@ export default function Alertas() {
                     </div>
                   )}
                 </div>
-                
                 <div className={styles.cardBody}>
                   <h3 className={styles.alertTitle}>{alert.title}</h3>
                   <p className={styles.alertDesc}>{alert.description}</p>
                 </div>
-
                 <div className={styles.cardFooter}>
                   <div className={styles.locationInfo}>
                     <MapPin size={14} />
@@ -378,15 +349,13 @@ export default function Alertas() {
           </div>
         )}
       </main>
-
-      {/* Modal de Criar Alerta */}
+      {}
       {showCreateModal && (
         <div className={styles.modalOverlay} onClick={() => setShowCreateModal(false)}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setShowCreateModal(false)}>
               <X size={24} />
             </button>
-            
             <div className={styles.modalHeader}>
               <div className={styles.iconBox}>
                 <Plus size={24} />
@@ -395,7 +364,6 @@ export default function Alertas() {
                 <h2 className={styles.modalTitle}>Criar Novo Alerta</h2>
               </div>
             </div>
-
             <div className={styles.modalBody}>
               <div className={styles.formGroup}>
                 <label>Tipo de Alerta</label>
@@ -410,7 +378,6 @@ export default function Alertas() {
                   <option value="nova_linha">Nova Linha</option>
                 </select>
               </div>
-
               <div className={styles.formGroup}>
                 <label>Título</label>
                 <input 
@@ -421,7 +388,6 @@ export default function Alertas() {
                   placeholder="Digite o título do alerta"
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Descrição</label>
                 <textarea 
@@ -432,7 +398,6 @@ export default function Alertas() {
                   placeholder="Descreva o alerta detalhadamente"
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Localização (opcional)</label>
                 <input 
@@ -444,7 +409,6 @@ export default function Alertas() {
                 />
               </div>
             </div>
-
             <div className={styles.modalFooter}>
               <button className={styles.secondaryBtn} onClick={() => setShowCreateModal(false)}>
                 Cancelar
@@ -456,15 +420,13 @@ export default function Alertas() {
           </div>
         </div>
       )}
-
-      {/* Modal de Editar Alerta */}
+      {}
       {editingAlert && (
         <div className={styles.modalOverlay} onClick={() => setEditingAlert(null)}>
           <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
             <button className={styles.modalClose} onClick={() => setEditingAlert(null)}>
               <X size={24} />
             </button>
-            
             <div className={styles.modalHeader}>
               <div className={styles.iconBox}>
                 <Edit2 size={24} />
@@ -473,7 +435,6 @@ export default function Alertas() {
                 <h2 className={styles.modalTitle}>Editar Alerta</h2>
               </div>
             </div>
-
             <div className={styles.modalBody}>
               <div className={styles.formGroup}>
                 <label>Tipo de Alerta</label>
@@ -488,7 +449,6 @@ export default function Alertas() {
                   <option value="nova_linha">Nova Linha</option>
                 </select>
               </div>
-
               <div className={styles.formGroup}>
                 <label>Título</label>
                 <input 
@@ -498,7 +458,6 @@ export default function Alertas() {
                   className={styles.input}
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Descrição</label>
                 <textarea 
@@ -508,7 +467,6 @@ export default function Alertas() {
                   rows="4"
                 />
               </div>
-
               <div className={styles.formGroup}>
                 <label>Localização (opcional)</label>
                 <input 
@@ -519,7 +477,6 @@ export default function Alertas() {
                 />
               </div>
             </div>
-
             <div className={styles.modalFooter}>
               <button className={styles.secondaryBtn} onClick={() => setEditingAlert(null)}>
                 Cancelar
@@ -527,7 +484,7 @@ export default function Alertas() {
               <button className={styles.primaryBtn} onClick={handleEditAlert}>
                 Salvar Alterações
               </button>
-              {/* SweetAlert is used for detail view; modal removed */}
+              {}
             </div>
           </div>
         </div>

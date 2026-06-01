@@ -33,18 +33,12 @@ import { MapContainer, TileLayer, Marker, useMapEvents, Polyline } from 'react-l
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Swal from 'sweetalert2';
-
 const COLORS = ['#1c4f36', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
-
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 import styles from './Admin.module.css';
-
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
-
-// ---------- AUXILIARY COMPONENTS ----------
-
 function CardStat({ icon, title, subtitle, sub2, color = '#10b981' }) {
   return (
     <div className={styles.statCard}>
@@ -57,7 +51,6 @@ function CardStat({ icon, title, subtitle, sub2, color = '#10b981' }) {
     </div>
   );
 }
-
 function RankingItem({ pos, linha, desc, rel, tag, tagColor, tagText, star, progress }) {
   return (
     <div className={styles.rankingItem}>
@@ -84,7 +77,6 @@ function RankingItem({ pos, linha, desc, rel, tag, tagColor, tagText, star, prog
     </div>
   );
 }
-
 function MapClickHandler({ onClick }) {
   useMapEvents({
     click(e) { 
@@ -95,8 +87,6 @@ function MapClickHandler({ onClick }) {
   });
   return null;
 }
-
-// ---------- TABELA RESPONSIVA COMPONENT ----------
 function ResponsiveTable({ headers, data, renderRow, actions }) {
   return (
     <div className={styles.responsiveTableWrapper}>
@@ -115,7 +105,6 @@ function ResponsiveTable({ headers, data, renderRow, actions }) {
           </tbody>
         </table>
       </div>
-      
       <div className={styles.mobileCards}>
         {data.map((item, idx) => (
           <div key={idx} className={styles.mobileCard}>
@@ -138,16 +127,12 @@ function ResponsiveTable({ headers, data, renderRow, actions }) {
     </div>
   );
 }
-
-// ---------- ABAS ----------
-
 function VisaoGeralTab() {
   const [lines, setLines] = useState([]);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ alerts: 0, reports: 0, avgLine: 0, avgDriver: 0, redemptions: 0, totalPoints: 0 });
   const [barChartData, setBarChartData] = useState([]);
-
   useEffect(() => {
     async function load() {
       try {
@@ -158,32 +143,25 @@ function VisaoGeralTab() {
           supabase.from('redemptions').select('*'),
           storage.getAlerts()
         ]);
-
         const linesList = linesData || [];
         const reportsList = reportsData || [];
         const ratingsList = ratingsData.data || [];
         const redemptionsList = redemptionsData.data || [];
         const allAlerts = alertsData || [];
-
         setLines(linesList);
-        
         const unifiedReports = [
           ...reportsList,
           ...allAlerts.map(a => ({ ...a, author: 'Admin MobTracker' }))
         ];
         setReports(unifiedReports);
-
         const lineRatings = ratingsList.filter(r => r.rating_type === 'line');
         const driverRatings = ratingsList.filter(r => r.rating_type === 'driver');
-        
         const avgL = lineRatings.length > 0 
           ? lineRatings.reduce((sum, r) => sum + r.rating_value, 0) / lineRatings.length 
           : 4.2;
-          
         const avgD = driverRatings.length > 0 
           ? driverRatings.reduce((sum, r) => sum + r.rating_value, 0) / driverRatings.length 
           : 4.7;
-
         setStats({
           alerts: allAlerts.length,
           reports: reportsList.length,
@@ -192,7 +170,6 @@ function VisaoGeralTab() {
           redemptions: redemptionsList.length,
           totalPoints: redemptionsList.reduce((sum, r) => sum + (r.cost || 0), 0)
         });
-
         const counts = [0, 0, 0, 0, 0];
         if (lineRatings && lineRatings.length > 0) {
           lineRatings.forEach(r => {
@@ -200,7 +177,6 @@ function VisaoGeralTab() {
             if (val >= 1 && val <= 5) counts[val-1]++;
           });
         }
-        
         setBarChartData([
           { name: '1★', uv: counts[0] },
           { name: '2★', uv: counts[1] },
@@ -208,7 +184,6 @@ function VisaoGeralTab() {
           { name: '4★', uv: counts[3] },
           { name: '5★', uv: counts[4] }
         ]);
-
         setLoading(false);
       } catch (err) {
         console.error("Dashboard load error:", err);
@@ -217,14 +192,12 @@ function VisaoGeralTab() {
     }
     load();
   }, []);
-
   const pieData = [
     { name: 'Crítico', value: reports.filter(r => r.type === 'negative').length || 0 },
     { name: 'Aviso', value: reports.filter(r => r.type === 'warning').length || 0 },
     { name: 'Positivo', value: reports.filter(r => r.type === 'positive').length || 0 },
     { name: 'Info', value: reports.filter(r => r.type === 'info').length || 0 }
   ];
-
   return (
     <div className={styles.visaoGeralContainer}>
       <div className={styles.statsGrid}>
@@ -233,7 +206,6 @@ function VisaoGeralTab() {
         <CardStat icon={<Star />} title={stats.avgLine.toFixed(1)} subtitle="Avaliação das Linhas" color="#10b981" sub2={`Média motoristas: ${stats.avgDriver.toFixed(1)}`} />
         <CardStat icon={<Award />} title={stats.redemptions?.toString() || "0"} subtitle="Recompensas" color="#10b981" sub2={`${stats.totalPoints || 0} pts resgatados`} />
       </div>
-
       <div className={styles.chartsGrid}>
         <div className={styles.tableContainer}>
           <div className={styles.chartWrapper}>
@@ -266,7 +238,6 @@ function VisaoGeralTab() {
             </div>
           </div>
         </div>
-
         <div className={styles.tableContainer}>
           <h3 className={styles.statTitle}>Frequência de Notas</h3>
           <div className={styles.chartContainer}>
@@ -281,7 +252,6 @@ function VisaoGeralTab() {
           </div>
         </div>
       </div>
-
       <div className={styles.tableContainer}>
         <div className={styles.tableHeader}>
           <h3 className={styles.statTitle}>Ranking de Engajamento por Linha</h3>
@@ -318,16 +288,13 @@ function VisaoGeralTab() {
     </div>
   );
 }
-
 function UsuariosTab() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({ nome: '', email: '', points: 0, password: '', foto: null });
-
   useEffect(() => { loadUsers(); }, []);
-
   async function loadUsers() {
     setLoading(true);
     try {
@@ -339,7 +306,6 @@ function UsuariosTab() {
       setLoading(false);
     }
   }
-
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -358,7 +324,6 @@ function UsuariosTab() {
       Swal.fire({ title: 'Erro', text: err.message, icon: 'error', confirmButtonColor: '#10b981' });
     }
   };
-
   const handleDelete = async (id) => {
     const res = await Swal.fire({ title: 'Excluir?', text: 'Remover perfil do banco?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
     if (res.isConfirmed) {
@@ -366,9 +331,7 @@ function UsuariosTab() {
       loadUsers();
     }
   };
-
   const headers = ['Nome', 'E-mail', 'MobPontos', 'Cadastro'];
-  
   const renderUserRow = (user) => (
     <tr key={user.id}>
       <td>
@@ -394,7 +357,6 @@ function UsuariosTab() {
       </td>
     </tr>
   );
-
   const userActions = (user) => (
     <>
       <button className={styles.actionBtn} onClick={() => { setEditingUser(user); setFormData({ nome: user.nome || '', email: user.email, points: user.points || 0, password: '', foto: user.foto || null }); setShowModal(true); }} title="Editar">
@@ -405,7 +367,6 @@ function UsuariosTab() {
       </button>
     </>
   );
-
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
@@ -417,12 +378,11 @@ function UsuariosTab() {
           <Plus size={18} /> Novo Usuário
         </button>
       </div>
-
       {loading ? (
         <p className={styles.loadingState}>Carregando...</p>
       ) : (
         <>
-          {/* Desktop Table */}
+          {}
           <div className={styles.desktopOnly}>
             <table className={styles.modernTable}>
               <thead>
@@ -436,8 +396,7 @@ function UsuariosTab() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Cards */}
+          {}
           <div className={styles.mobileOnly}>
             {profiles.map(user => (
               <div key={user.id} className={styles.mobileCard}>
@@ -474,7 +433,6 @@ function UsuariosTab() {
           </div>
         </>
       )}
-
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -528,26 +486,21 @@ function UsuariosTab() {
     </div>
   );
 }
-
 function PontosTab() {
   const [stops, setStops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingStop, setEditingStop] = useState(null);
   const [formData, setFormData] = useState({ name: '', location: '', lat: -23.100, lng: -45.700, lines: '', cobertura: false, banco: false, acessivel: false });
-
   useEffect(() => { loadStops(); }, []);
-
   const loadStops = async () => {
     setLoading(true);
     try { setStops(await storage.getStops()); } catch (err) { console.error(err); } finally { setLoading(false); }
   };
-
   const handleDelete = async (id) => {
     const result = await Swal.fire({ title: 'Excluir Ponto?', text: 'Esta ação não pode ser desfeita.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
     if(result.isConfirmed) { await storage.deleteStop(id); loadStops(); }
   };
-
   const handleEdit = (stop) => {
     setEditingStop(stop);
     setFormData({
@@ -562,12 +515,10 @@ function PontosTab() {
     });
     setShowModal(true);
   };
-
   const handleSave = async (e) => {
     e.preventDefault();
     try {
       const formattedLines = formData.lines.split(',').map(s => s.trim()).filter(s => s !== '');
-      
       const payload = { 
         name: formData.name,
         location: formData.location,
@@ -575,13 +526,11 @@ function PontosTab() {
         lng: formData.lng,
         lines: formattedLines 
       };
-
       if (editingStop) {
         await storage.updateStop(editingStop.id, payload);
       } else {
         await storage.addStop(payload);
       }
-      
       Swal.fire({
         icon: 'success',
         title: editingStop ? 'Ponto Atualizado!' : 'Ponto Adicionado!',
@@ -590,7 +539,6 @@ function PontosTab() {
         timer: 2000,
         showConfirmButton: false
       });
-      
       setShowModal(false);
       setEditingStop(null);
       loadStops();
@@ -605,7 +553,6 @@ function PontosTab() {
       });
     }
   };
-
   const stopActions = (stop) => (
     <>
       <button className={styles.actionBtn} onClick={() => handleEdit(stop)} title="Editar">
@@ -616,7 +563,6 @@ function PontosTab() {
       </button>
     </>
   );
-
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
@@ -628,12 +574,11 @@ function PontosTab() {
           <Plus size={18} /> Novo Ponto
         </button>
       </div>
-
       {loading ? (
         <p className={styles.loadingState}>Carregando...</p>
       ) : (
         <>
-          {/* Desktop Table */}
+          {}
           <div className={styles.desktopOnly}>
             <table className={styles.modernTable}>
               <thead>
@@ -655,7 +600,6 @@ function PontosTab() {
                           let linesArray = [];
                           if (Array.isArray(linesData)) linesArray = linesData;
                           else if (typeof linesData === 'string') linesArray = linesData.split(',').map(s => s.trim());
-                          
                           return linesArray.map(l => (
                             <span key={l} className={styles.lineTag}>{l}</span>
                           ));
@@ -673,8 +617,7 @@ function PontosTab() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Cards */}
+          {}
           <div className={styles.mobileOnly}>
             {stops.map(stop => (
               <div key={stop.id} className={styles.mobileCard}>
@@ -691,7 +634,6 @@ function PontosTab() {
                         let linesArray = [];
                         if (Array.isArray(linesData)) linesArray = linesData;
                         else if (typeof linesData === 'string') linesArray = linesData.split(',').map(s => s.trim());
-                        
                         return linesArray.map(l => (
                           <span key={l} className={styles.lineTag}>{l}</span>
                         ));
@@ -711,7 +653,6 @@ function PontosTab() {
           </div>
         </>
       )}
-
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -731,7 +672,6 @@ function PontosTab() {
                 <label className={styles.formLabel}>Linhas (separadas por vírgula)</label>
                 <input className={styles.inputField} required placeholder="Ex: 01, 04, 10" value={formData.lines} onChange={e => setFormData({...formData, lines: e.target.value})} />
               </div>
-              
               <div className={styles.checkboxGroup}>
                 <label>
                   <input type="checkbox" checked={formData.cobertura} onChange={e => setFormData({...formData, cobertura: e.target.checked})} /> Cobertura
@@ -743,7 +683,6 @@ function PontosTab() {
                   <input type="checkbox" checked={formData.acessivel} onChange={e => setFormData({...formData, acessivel: e.target.checked})} /> Acessível
                 </label>
               </div>
-
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Latitude</label>
@@ -754,7 +693,6 @@ function PontosTab() {
                   <input className={styles.inputField} type="number" step="any" value={formData.lng} onChange={e => setFormData({...formData, lng: parseFloat(e.target.value) || 0})} />
                 </div>
               </div>
-
               <div className={styles.mapContainer}>
                 <MapContainer center={[formData.lat, formData.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
@@ -762,7 +700,6 @@ function PontosTab() {
                   <Marker position={[formData.lat, formData.lng]} />
                 </MapContainer>
               </div>
-
               <div className={styles.modalButtons}>
                 <button type="button" className={styles.secondaryBtn} onClick={() => setShowModal(false)}>Cancelar</button>
                 <button type="submit" className={styles.primaryBtn}>Salvar</button>
@@ -774,7 +711,6 @@ function PontosTab() {
     </div>
   );
 }
-
 function AlertasTab() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -783,9 +719,7 @@ function AlertasTab() {
   const [formData, setFormData] = useState({ title: '', description: '', type: 'aviso', line_id: '' });
   const [lines, setLines] = useState([]);
   const [activeFilter, setActiveFilter] = useState('admin');
-
   useEffect(() => { load(); }, []);
-
   const load = async () => {
     setLoading(true);
     try {
@@ -798,7 +732,6 @@ function AlertasTab() {
       setLoading(false); 
     }
   };
-
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -815,7 +748,6 @@ function AlertasTab() {
       Swal.fire({ title: 'Erro', text: err.message, icon: 'error', confirmButtonColor: '#10b981' });
     }
   };
-
   const handleEdit = (alert) => {
     setEditingAlert(alert);
     setFormData({
@@ -826,7 +758,6 @@ function AlertasTab() {
     });
     setShowModal(true);
   };
-
   const TAG_COLORS = {
     positivo: { bg: '#ecfdf5', text: '#059669', label: 'Positivo' },
     moderado: { bg: '#fffbeb', text: '#d97706', label: 'Moderado' },
@@ -837,15 +768,12 @@ function AlertasTab() {
     aviso: { bg: '#fffbeb', text: '#d97706', label: 'Moderado' },
     nova_linha: { bg: '#ecfdf5', text: '#059669', label: 'Positivo' },
   };
-
   const getTypeStyle = (type) => {
     return TAG_COLORS[type?.toLowerCase()] || { bg: '#f1f5f9', text: '#64748b', label: type };
   };
-
   const officialAlerts = reports.filter(r => r.source === 'alerts');
   const userReports = reports.filter(r => r.source === 'reports');
   const displayList = activeFilter === 'admin' ? officialAlerts : userReports;
-
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
@@ -857,12 +785,10 @@ function AlertasTab() {
           <Plus size={18} /> Novo Alerta
         </button>
       </div>
-
       <div className={styles.filterButtons}>
         <button onClick={() => setActiveFilter('admin')} className={`${styles.filterBtn} ${activeFilter === 'admin' ? styles.activeFilter : ''}`}>Oficiais</button>
         <button onClick={() => setActiveFilter('users')} className={`${styles.filterBtn} ${activeFilter === 'users' ? styles.activeFilter : ''}`}>Comunidade</button>
       </div>
-
       <div className={styles.alertasGrid}>
         {displayList.map(r => (
           <div key={r.id} className={styles.alertaCard}>
@@ -904,7 +830,6 @@ function AlertasTab() {
           </div>
         ))}
       </div>
-
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -937,41 +862,33 @@ function AlertasTab() {
     </div>
   );
 }
-
 function LinhasTab() {
   const [lines, setLines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingLine, setEditingLine] = useState(null);
   const [formData, setFormData] = useState({ name: '', description: '', route: '', popular: false });
-
   useEffect(() => { loadLines(); }, []);
-
   const loadLines = async () => {
     setLoading(true);
     try { setLines(await storage.getLines()); } catch (err) { console.error(err); } finally { setLoading(false); }
   };
-
   const handleDelete = async (id) => {
     const res = await Swal.fire({ title: 'Excluir Linha?', text: 'Remover todos os dados desta rota?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
     if(res.isConfirmed) { await storage.deleteLine(id); loadLines(); }
   };
-
   const handleEdit = (line) => {
     setEditingLine(line);
     setFormData({ name: line.name, description: line.description, popular: !!line.popular });
     setShowModal(true);
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (editingLine) {
       await storage.updateLine(editingLine.id, formData);
     } else {
       await storage.addLine(formData);
     }
-
     Swal.fire({
       icon: 'success',
       title: editingLine ? 'Linha Atualizada!' : 'Linha Criada!',
@@ -980,12 +897,10 @@ function LinhasTab() {
       timer: 2000,
       showConfirmButton: false
     });
-
     setShowModal(false);
     setEditingLine(null);
     loadLines();
   };
-
   const lineActions = (line) => (
     <>
       <button className={styles.actionBtn} onClick={() => handleEdit(line)} title="Editar">
@@ -996,7 +911,6 @@ function LinhasTab() {
       </button>
     </>
   );
-
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
@@ -1008,12 +922,11 @@ function LinhasTab() {
           <Plus size={18} /> Nova Linha
         </button>
       </div>
-
       {loading ? (
         <p className={styles.loadingState}>Carregando...</p>
       ) : (
         <>
-          {/* Desktop Table */}
+          {}
           <div className={styles.desktopOnly}>
             <table className={styles.modernTable}>
               <thead>
@@ -1038,8 +951,7 @@ function LinhasTab() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Cards */}
+          {}
           <div className={styles.mobileOnly}>
             {lines.map(line => (
               <div key={line.id} className={styles.mobileCard}>
@@ -1061,7 +973,6 @@ function LinhasTab() {
           </div>
         </>
       )}
-
       {showModal && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -1103,36 +1014,28 @@ function LinhasTab() {
     </div>
   );
 }
-
 function SolicitacoesSenhaTab() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => { 
     load(); 
-    
-    // Configura o real-time para escutar mudanças na tabela
     const channel = supabase
       .channel('password_requests_changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'password_requests' }, 
         (payload) => {
-          // Quando houver qualquer mudança (INSERT, UPDATE, DELETE), recarrega os dados
           load();
         }
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
   const load = async () => {
     setLoading(true);
     try { setRequests(await storage.getPasswordRequests()); } catch(e) {} finally { setLoading(false); }
   };
-
   return (
     <div className={styles.tableContainer}>
       <div className={styles.tableHeader}>
@@ -1141,12 +1044,11 @@ function SolicitacoesSenhaTab() {
           <p className={styles.tableSubtitle}>Solicitações de redefinição de acesso</p>
         </div>
       </div>
-
       {loading ? (
         <p className={styles.loadingState}>Carregando...</p>
       ) : (
         <>
-          {/* Desktop Table */}
+          {}
           <div className={styles.desktopOnly}>
             <table className={styles.modernTable}>
               <thead>
@@ -1173,8 +1075,7 @@ function SolicitacoesSenhaTab() {
               </tbody>
             </table>
           </div>
-
-          {/* Mobile Cards */}
+          {}
           <div className={styles.mobileOnly}>
             {requests.map(req => (
               <div key={req.id} className={styles.mobileCard}>
@@ -1206,15 +1107,12 @@ function SolicitacoesSenhaTab() {
     </div>
   );
 }
-
 export default function Admin() {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('geral');
-
   if (!user || user.email !== 'admin@mobtracker.com') {
     return <Navigate to="/login" />;
   }
-
   const menuItems = [
     { id: 'geral', label: 'Visão Geral', icon: <LayoutDashboard size={20} /> },
     { id: 'usuarios', label: 'Usuários', icon: <Users size={20} /> },
@@ -1223,14 +1121,12 @@ export default function Admin() {
     { id: 'linhas', label: 'Linhas', icon: <Route size={20} /> },
     { id: 'senhas', label: 'Senhas', icon: <Key size={20} /> },
   ];
-
   return (
     <div className={styles.adminContainer}>
       <aside className={styles.sidebar}>
         <div className={styles.logoArea}>
           <h1>MobAdmin</h1>
         </div>
-
         <nav className={styles.nav}>
           {menuItems.map(item => (
             <div 
@@ -1244,7 +1140,6 @@ export default function Admin() {
             </div>
           ))}
         </nav>
-
         <div className={styles.logoutButton}>
           <div className={styles.navItem} onClick={logout}>
             <LogOut size={20} color="#10b981" />
@@ -1252,7 +1147,6 @@ export default function Admin() {
           </div>
         </div>
       </aside>
-
       <main className={styles.mainContent}>
         <header className={styles.header}>
           <div className={styles.welcomeSection}>
@@ -1270,7 +1164,6 @@ export default function Admin() {
             </div>
           </div>
         </header>
-
         <div className={styles.tabContent}>
           {activeTab === 'geral' && <VisaoGeralTab />}
           {activeTab === 'usuarios' && <UsuariosTab />}
